@@ -1,6 +1,6 @@
 {
   "name": "stackbrief",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Visual codebase intelligence for AI coding tools",
   "main": "./dist/cli.js",
   "bin": {
@@ -36,11 +36,11 @@
     "url": "https://github.com/ragavtech/stackbrief/issues"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "open": "^9.1.0",
-    "glob": "^10.3.10",
-    "semver": "^7.5.4",
     "chokidar": "^3.5.3",
+    "express": "^4.18.2",
+    "glob": "^10.3.10",
+    "open": "^8.4.2",
+    "semver": "^7.5.4",
     "ws": "^8.16.0"
   },
   "devDependencies": {
@@ -48,7 +48,7 @@
     "@types/node": "^20.11.0",
     "@types/semver": "^7.5.6",
     "@types/ws": "^8.5.10",
-    "typescript": "^5.3.3",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   }
 }
