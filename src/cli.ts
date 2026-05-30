@@ -147,7 +147,7 @@ async function runScan(targetDir: string) {
 
   saveRecent(targetDir);
   printStep('Writing CLAUDE.md');
-  const claudeMdPath = path.join(targetDir, 'CLAUDE.md');
+  const claudeMdPath = path.join(process.cwd(), 'CLAUDE.md');
   const claudeMdContent = generateClaudeMd(analysis);
   fs.writeFileSync(claudeMdPath, claudeMdContent, 'utf-8');
 
@@ -161,7 +161,7 @@ async function runScan(targetDir: string) {
   const aiInfo = await detectProvider();
 
   console.log('');
-  console.log(`  Dashboard ready at http://localhost:${port}`);
+  console.log(`  Dashboard open at http://localhost:${port}`);
   console.log(`  MCP server at http://localhost:3001`);
   console.log(`  CLAUDE.md written to ${claudeMdPath}`);
 
@@ -178,13 +178,16 @@ async function runScan(targetDir: string) {
   }
   console.log('');
 
-  // Open browser
-  try {
-    const open = (await import('open')).default;
-    await open(`http://localhost:${port}`);
-  } catch {
-    // Non-fatal if open fails
-  }
+  // Open browser after 1s to ensure server is fully ready
+  console.log('  Opening dashboard in browser...');
+  setTimeout(async () => {
+    try {
+      const open = (await import('open')).default;
+      await open(`http://localhost:${port}`);
+    } catch {
+      // Non-fatal if open fails
+    }
+  }, 1000);
 
   console.log('  Press Ctrl+C to stop\n');
 }
