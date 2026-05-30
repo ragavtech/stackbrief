@@ -402,20 +402,74 @@
     </div>
   </div>
 
-  <!-- First-run wizard -->
-  <div class="firstrun-overlay" id="firstrun-overlay" style="display:none">
-    <div class="firstrun-modal">
-      <div class="firstrun-logo">sb</div>
-      <h2 class="firstrun-title">stackbrief is ready</h2>
-      <p class="firstrun-desc">Your codebase has been scanned.<br>Connect an AI provider to unlock intelligent answers about your code.</p>
-      <div class="firstrun-actions">
-        <button class="firstrun-btn firstrun-btn-primary" data-goto="ollama">
-          Try Ollama — Free &amp; Private
-        </button>
-        <button class="firstrun-btn firstrun-btn-secondary" data-goto="claude">Connect Claude</button>
-        <button class="firstrun-btn firstrun-btn-secondary" data-goto="openai">Connect OpenAI</button>
+  <!-- Welcome screen (first run) -->
+  <div class="welcome-overlay" id="welcome-overlay" style="display:none">
+    <div class="welcome-content">
+
+      <!-- Logo + name -->
+      <div class="welcome-header">
+        <div class="welcome-logo">sb</div>
+        <span class="welcome-name">stackbrief</span>
       </div>
-      <button class="firstrun-skip" id="firstrun-skip">Skip for now — use dashboard only</button>
+
+      <p class="welcome-tagline">Visual codebase intelligence for AI coding tools.</p>
+
+      <hr class="welcome-divider" />
+
+      <!-- Three steps -->
+      <div class="welcome-steps">
+        <div class="welcome-step">
+          <div class="step-circle">1</div>
+          <div class="step-body">
+            <div class="step-title">Scans your codebase</div>
+            <div class="step-desc">Analyses your architecture, modules, dependencies, and coding conventions in seconds.</div>
+          </div>
+        </div>
+        <div class="welcome-step">
+          <div class="step-circle">2</div>
+          <div class="step-body">
+            <div class="step-title">Shows you everything</div>
+            <div class="step-desc">Opens a visual dashboard with an interactive code map, dependency comparison, and context health score.</div>
+          </div>
+        </div>
+        <div class="welcome-step">
+          <div class="step-circle">3</div>
+          <div class="step-body">
+            <div class="step-title">Powers your AI tools</div>
+            <div class="step-desc">Writes CLAUDE.md to your project and runs an MCP server so Claude Code and Cursor always know your codebase.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project picker -->
+      <div class="welcome-picker">
+        <div class="welcome-picker-heading">Choose a project to get started</div>
+
+        <button class="welcome-btn-browse" id="welcome-browse-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" flex-shrink="0">
+            <path d="M2 5C2 4.448 2.448 4 3 4H7L9 6H15C15.552 6 16 6.448 16 7V13C16 13.552 15.552 14 15 14H3C2.448 14 2 13.552 2 13V5Z" stroke="white" stroke-width="1.3" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <div class="welcome-btn-primary-text">Browse and select a folder</div>
+            <div class="welcome-btn-sub">Choose any project on your machine</div>
+          </div>
+        </button>
+
+        <button class="welcome-btn-current" id="welcome-current-btn">
+          <div class="welcome-btn-current-label">Scan current directory</div>
+          <div class="welcome-cwd" id="welcome-cwd">loading…</div>
+        </button>
+
+        <div class="welcome-scanning" id="welcome-scanning">
+          <span class="welcome-scanning-text" id="welcome-scanning-text">Scanning…</span>
+        </div>
+      </div>
+
+      <!-- Recents -->
+      <div id="welcome-recents"></div>
+
+      <p class="welcome-footer">stackbrief runs entirely on your machine. No data leaves your device.</p>
+
     </div>
   </div>
 

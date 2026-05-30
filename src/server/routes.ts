@@ -4,7 +4,7 @@ import { exec } from 'child_process';
 import { AnalysisResult } from '../types';
 import { detectProvider } from '../ai/detector';
 import { chat } from '../ai/chat';
-import { getConfig, getMaskedConfig, updateProvider, setActiveProvider, markFirstRunComplete, getProviderKey } from '../config/manager';
+import { getConfig, saveConfig, getMaskedConfig, updateProvider, setActiveProvider, markFirstRunComplete, getProviderKey } from '../config/manager';
 import { isOllamaRunning, getOllamaModels, askOllama } from '../ai/providers/ollama';
 import { askClaude } from '../ai/providers/claude';
 import { askOpenAI } from '../ai/providers/openai';
@@ -300,6 +300,19 @@ export function createRoutes(analysisRef: { current: AnalysisResult }): Router {
   router.put('/config/firstrun', (_req, res) => {
     markFirstRunComplete();
     res.json({ ok: true });
+  });
+
+  // Reset first-run state (for testing / dev)
+  router.post('/config/reset-first-run', (_req, res) => {
+    const config = getConfig();
+    config.firstRunComplete = false;
+    saveConfig(config);
+    res.json({ ok: true });
+  });
+
+  // Current working directory (needed by welcome screen)
+  router.get('/cwd', (_req, res) => {
+    res.json({ cwd: process.cwd() });
   });
 
   // ── Ollama helpers ────────────────────────────────────────

@@ -1460,3 +1460,183 @@ mark {
   padding-left: 8px;
   margin-left: -10px;
 }
+
+/* ─── Welcome screen (first run) ─────────────────────────── */
+
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: #0e1212;
+  z-index: 1002;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 56px 20px 48px;
+  transition: opacity 0.3s ease;
+}
+
+.welcome-overlay.welcome-fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.welcome-content {
+  width: 100%;
+  max-width: 520px;
+}
+
+/* Header */
+.welcome-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.welcome-logo {
+  width: 34px; height: 34px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+  letter-spacing: 0.01em;
+  flex-shrink: 0;
+}
+
+.welcome-name {
+  font-size: 20px; font-weight: 500; color: #e8efee;
+}
+
+.welcome-tagline {
+  font-size: 15px; color: #4a6060;
+  margin-top: 8px; line-height: 1.5;
+}
+
+.welcome-divider {
+  border: none;
+  border-top: 1px solid #1a2020;
+  margin: 28px 0;
+}
+
+/* Steps */
+.welcome-steps {
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+.welcome-step {
+  display: flex; align-items: flex-start; gap: 16px;
+}
+
+.step-circle {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #111818;
+  border: 1px solid #2E8B7A;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: #2E8B7A;
+  flex-shrink: 0; margin-top: 2px;
+}
+
+.step-title {
+  font-size: 14px; font-weight: 500; color: #e8efee; margin-bottom: 4px;
+}
+
+.step-desc {
+  font-size: 13px; color: #4a6060; line-height: 1.6;
+}
+
+/* Project picker */
+.welcome-picker { margin-top: 28px; }
+
+.welcome-picker-heading {
+  font-size: 13px; font-weight: 500; color: #e8efee; margin-bottom: 12px;
+}
+
+/* Browse button */
+.welcome-btn-browse {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; background: var(--accent); color: #fff;
+  border: none; border-radius: 6px; padding: 14px 16px;
+  cursor: pointer; transition: opacity 0.15s; text-align: left;
+  font-family: inherit;
+}
+
+.welcome-btn-browse:hover:not(:disabled) { opacity: 0.88; }
+.welcome-btn-browse:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.welcome-btn-primary-text {
+  font-size: 14px; font-weight: 500; line-height: 1;
+  margin-bottom: 4px;
+}
+
+.welcome-btn-sub {
+  font-size: 11px; color: rgba(255,255,255,0.6); line-height: 1;
+}
+
+/* Current dir button */
+.welcome-btn-current {
+  display: flex; flex-direction: column;
+  width: 100%; background: #111818;
+  border: 0.5px solid #1a2020; border-radius: 6px;
+  padding: 13px 16px; margin-top: 8px;
+  cursor: pointer; text-align: left;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+
+.welcome-btn-current:hover:not(:disabled) { border-color: #2a3535; }
+.welcome-btn-current:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.welcome-btn-current-label {
+  font-size: 14px; font-weight: 400; color: #4a6060;
+  transition: color 0.15s;
+}
+
+.welcome-btn-current:hover .welcome-btn-current-label { color: #e8efee; }
+
+.welcome-cwd {
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 11px; color: #3a5050; margin-top: 5px;
+  word-break: break-all; line-height: 1.4;
+}
+
+/* Scanning state */
+.welcome-scanning {
+  display: none;
+  text-align: center;
+  padding: 14px 0 4px;
+  font-size: 13px; color: #4a6060;
+}
+
+/* Recents */
+.welcome-recents-heading {
+  font-size: 11px; color: #3a5050;
+  margin: 20px 0 8px;
+}
+
+.welcome-recent-item {
+  display: flex; flex-direction: column;
+  padding: 10px 14px; border-radius: 5px;
+  border: 0.5px solid #1a2020; cursor: pointer;
+  margin-bottom: 6px;
+  transition: border-color 0.15s, background 0.1s;
+}
+
+.welcome-recent-item:hover {
+  border-color: #2a3535; background: rgba(255,255,255,0.02);
+}
+
+.welcome-recent-name {
+  font-size: 13px; font-weight: 500; color: #e8efee;
+}
+
+.welcome-recent-path {
+  font-size: 11px; color: #3a5050;
+  font-family: ui-monospace, 'SF Mono', monospace;
+  margin-top: 2px; word-break: break-all;
+}
+
+/* Footer note */
+.welcome-footer {
+  font-size: 11px; color: #3a5050;
+  margin-top: 28px; text-align: center; line-height: 1.5;
+}

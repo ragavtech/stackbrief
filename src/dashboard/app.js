@@ -1593,42 +1593,139 @@
     }));
   }
 
-  // ─── First-run wizard ─────────────────────────────────────
+  // ─── Welcome screen (first run) ──────────────────────────
 
   async function checkFirstRun() {
     try {
       const res = await fetch('/api/config');
       const cfg = await res.json();
-      if (!cfg.firstRunComplete) showFirstRunWizard();
+      if (!cfg.firstRunComplete) showWelcomeScreen();
     } catch { /* silent */ }
   }
 
-  function showFirstRunWizard() {
-    const overlay = document.getElementById('firstrun-overlay');
+  async function showWelcomeScreen() {
+    const overlay = document.getElementById('welcome-overlay');
     if (!overlay) return;
     overlay.style.display = 'flex';
 
-    overlay.querySelectorAll('.firstrun-btn[data-goto]').forEach(btn => {
-      btn.addEventListener('click', function () {
-        overlay.style.display = 'none';
-        markFirstRunDone();
-        activateSection('settings');
-        // Highlight the chosen provider card after a tick
-        setTimeout(() => {
-          const card = document.getElementById('provider-card-' + this.dataset.goto);
-          if (card) {
-            card.classList.add('provider-highlight');
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => card.classList.remove('provider-highlight'), 5000);
-          }
-        }, 300);
-      });
+    // Load current working directory
+    try {
+      const res  = await fetch('/api/cwd');
+      const data = await res.json();
+      const cwdEl = document.getElementById('welcome-cwd');
+      if (cwdEl) cwdEl.textContent = data.cwd || '';
+    } catch { /* silent */ }
+
+    // Load recent projects
+    try {
+      const res     = await fetch('/api/recents');
+      const recents = await res.json();
+      const container = document.getElementById('welcome-recents');
+      if (container && recents && recents.length) {
+        container.innerHTML =
+          '<div class="welcome-recents-heading">Or continue with a recent project</div>' +
+          recents.slice(0, 3).map(r => `
+            <div class="welcome-recent-item" data-path="${escHtml(r.path)}">
+              <div class="welcome-recent-name">${escHtml(r.name)}</div>
+              <div class="welcome-recent-path">${escHtml(r.path)}</div>
+            </div>
+          `).join('');
+
+        container.querySelectorAll('.welcome-recent-item').forEach(item => {
+          item.addEventListener('click', function () {
+            welcomeScan(this.dataset.path);
+          });
+        });
+      }
+    } catch { /* silent */ }
+
+    // Browse button — use /api/browse (osascript on macOS)
+    document.getElementById('welcome-browse-btn')?.addEventListener('click', async function () {
+      this.disabled = true;
+      this.querySelector('.welcome-btn-primary-text').textContent = 'Opening…';
+      try {
+        const res  = await fetch('/api/browse');
+        const data = await res.json();
+        if (!data.cancelled && data.path) {
+          welcomeScan(data.path);
+          return;
+        }
+        // Fallback: show path input if browse fails or cancelled
+      } catch { /* silent */ }
+      // Reset button on failure
+      this.disabled = false;
+      this.querySelector('.welcome-btn-primary-text').textContent = 'Browse and select a folder';
     });
 
-    document.getElementById('firstrun-skip')?.addEventListener('click', function () {
-      overlay.style.display = 'none';
-      markFirstRunDone();
+    // Scan current dir button
+    document.getElementById('welcome-current-btn')?.addEventListener('click', async function () {
+      const cwd = document.getElementById('welcome-cwd')?.textContent?.trim();
+      if (cwd) welcomeScan(cwd);
     });
+  }
+
+  async function welcomeScan(dirPath) {
+    const overlay    = document.getElementById('welcome-overlay');
+    const browseBtn  = document.getElementById('welcome-browse-btn');
+    const currentBtn = document.getElementById('welcome-current-btn');
+    const scanningEl = document.getElementById('welcome-scanning');
+    const scanText   = document.getElementById('welcome-scanning-text');
+
+    // Disable buttons, show scanning indicator
+    if (browseBtn)  browseBtn.disabled  = true;
+    if (currentBtn) currentBtn.disabled = true;
+    if (scanningEl) scanningEl.style.display = 'block';
+    if (scanText)   scanText.textContent = `Scanning ${dirPath.split('/').pop() || dirPath}…`;
+
+    try {
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: dirPath })
+      });
+
+      if (!res.ok) throw new Error('Scan failed');
+      analysisData = await res.json();
+      npmVersionsCache = null;
+      window._codemapRendered = false;
+
+      // Mark first run complete
+      await fetch('/api/config/firstrun', { method: 'PUT' }).catch(() => {});
+
+      // Re-render dashboard with new data
+      renderMeta(analysisData);
+      renderMetrics(analysisData);
+      renderArchitecture(analysisData.architecture, analysisData.stack);
+      renderModulesGrid(analysisData.modules);
+      renderModulesList(analysisData.modules);
+      renderDependencies(analysisData.dependencies, {});
+      renderConventions(analysisData.conventions);
+      setupSearch(analysisData);
+      initTooltips();
+
+      // Kick off version fetch in background
+      fetchNpmVersions().then(versions => {
+        if (versions && Object.keys(versions).length) {
+          renderDependencies(analysisData.dependencies, versions);
+          filterDeps(currentDepFilter);
+          initTooltips();
+        }
+      });
+
+      // Fade out welcome screen → reveal dashboard
+      if (overlay) {
+        overlay.classList.add('welcome-fading');
+        setTimeout(() => { overlay.style.display = 'none'; }, 310);
+      }
+
+      activateSection('overview');
+      setupAskAI();
+
+    } catch (err) {
+      if (scanText)   scanText.textContent = 'Scan failed — ' + err.message;
+      if (browseBtn)  browseBtn.disabled  = false;
+      if (currentBtn) currentBtn.disabled = false;
+    }
   }
 
   async function markFirstRunDone() {
