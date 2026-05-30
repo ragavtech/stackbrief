@@ -2,6 +2,7 @@
 
 import path from 'path';
 import fs from 'fs';
+import open from 'open';
 import { scanDirectory } from './scanner/index';
 import { detectStack } from './scanner/detector';
 import { analyzeArchitecture } from './analyzer/architecture';
@@ -148,6 +149,8 @@ async function runScan(targetDir: string) {
   saveRecent(targetDir);
   printStep('Writing CLAUDE.md');
   const claudeMdPath = path.join(process.cwd(), 'CLAUDE.md');
+  console.log(`  Scan target: ${process.cwd()}`);
+  console.log(`  Writing CLAUDE.md to: ${claudeMdPath}`);
   const claudeMdContent = generateClaudeMd(analysis);
   fs.writeFileSync(claudeMdPath, claudeMdContent, 'utf-8');
 
@@ -179,13 +182,12 @@ async function runScan(targetDir: string) {
   console.log('');
 
   // Open browser after 1s to ensure server is fully ready
-  console.log('  Opening dashboard in browser...');
   setTimeout(async () => {
+    console.log('  Opening dashboard in browser...');
     try {
-      const open = (await import('open')).default;
       await open(`http://localhost:${port}`);
     } catch {
-      // Non-fatal if open fails
+      // Non-fatal if open fails (headless env, etc.)
     }
   }, 1000);
 

@@ -2,6 +2,7 @@
 .github/
 .claude/
 src/
+CLAUDE.md
 *.test.ts
 *.spec.ts
 coverage/
