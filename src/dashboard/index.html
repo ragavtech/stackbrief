@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stackbrief</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="layout">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="logo-mark">sb</div>
+        <span class="brand-name">stackbrief</span>
+        <span class="version-pill">v1.0.0</span>
+      </div>
+
+      <!-- Project switcher -->
+      <div class="topbar-center">
+        <button class="project-switcher" id="project-switcher" aria-haspopup="true" aria-expanded="false">
+          <span class="repo-name" id="repo-name">loading...</span>
+          <span class="repo-path" id="repo-path"></span>
+          <svg class="switcher-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <div class="project-dropdown" id="project-dropdown" role="menu">
+          <div class="browse-row">
+            <button class="browse-folder-btn" id="browse-folder-btn">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0">
+                <path d="M1.5 3.5C1.5 2.948 1.948 2.5 2.5 2.5H5.5L7 4H11.5C12.052 4 12.5 4.448 12.5 5V10.5C12.5 11.052 12.052 11.5 11.5 11.5H2.5C1.948 11.5 1.5 11.052 1.5 10.5V3.5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+              Browse folder
+            </button>
+            <span class="browse-hint" id="browse-hint"></span>
+          </div>
+          <!-- Fallback path input (shown on non-macOS) -->
+          <div class="path-input-row" id="path-input-row" style="display:none">
+            <input
+              type="text"
+              class="project-path-input"
+              id="project-path-input"
+              placeholder="Paste full path…"
+              spellcheck="false"
+              autocomplete="off"
+            />
+            <button class="scan-path-btn" id="scan-path-btn">Scan</button>
+          </div>
+          <div id="recent-paths-container"></div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <span class="scan-time" id="scan-time"></span>
+        <button class="rescan-btn" id="rescan-btn" data-tooltip="Rescans your codebase and updates all context. Run this after making significant changes to your project.">Re-scan</button>
+      </div>
+    </header>
+
+    <div class="body-layout">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <nav class="sidebar-nav">
+          <a href="." class="nav-item active" data-section="overview">Overview</a>
+          <a href="." class="nav-item"         data-section="modules">Modules</a>
+          <a href="." class="nav-item" data-section="codemap" data-tooltip="Visual tree diagram of your codebase architecture. Click any node to explore.">Code Map</a>
+          <a href="." class="nav-item" data-section="dependencies">Dependencies</a>
+          <a href="." class="nav-item" data-section="conventions" data-tooltip="Detected coding patterns and standards in your codebase. Helps AI tools write code that matches your style.">Conventions</a>
+          <a href="." class="nav-item" data-section="search">Search</a>
+          <a href="." class="nav-item nav-item-settings" data-section="settings" data-tooltip="Configure AI providers and manage stackbrief preferences.">Settings</a>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="mcp-indicator" id="mcp-indicator" data-tooltip="Model Context Protocol server is running. Claude Code and Cursor can pull your codebase context automatically without you having to explain your project.">
+            <span class="mcp-dot"></span>
+            <span class="mcp-label">MCP active</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="main">
+
+        <!-- ── Overview ──────────────────────────────────── -->
+        <section id="section-overview" class="section active">
+
+          <div class="metrics-row" id="metrics-row">
+            <div class="metric-card">
+              <div class="metric-value" id="metric-modules">—</div>
+              <div class="metric-label">modules</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-deps">—</div>
+              <div class="metric-label">dependencies</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-files">—</div>
+              <div class="metric-label">files scanned</div>
+            </div>
+            <div class="metric-card metric-card-score" data-tooltip="How well your codebase is understood by AI tools. Scored on structure, documentation, conventions, and test coverage.">
+              <div class="metric-value" id="metric-score">—</div>
+              <div class="metric-label">context score</div>
+              <div class="metric-score-desc" id="metric-score-desc"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Architecture</h2>
+            </div>
+            <div class="arch-grid" id="arch-grid"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Modules</h2>
+              <span class="card-count" id="modules-count-overview"></span>
+            </div>
+            <div class="modules-grid" id="modules-grid-overview"></div>
+          </div>
+
+          <!-- Ask AI -->
+          <div class="ask-section" id="ask-section">
+            <div class="ask-section-header">
+              <span class="ask-section-title">Ask AI</span>
+              <div class="ask-header-right">
+                <div class="ai-provider-status" id="ai-provider-status">
+                  <span class="ai-status-dot" id="ai-status-dot"></span>
+                  <span class="ai-status-label" id="ai-status-label">detecting…</span>
+                  <div class="ai-setup-tooltip" id="ai-setup-tooltip"></div>
+                </div>
+                <select class="ai-provider-select" id="ai-provider-select">
+                  <option value="auto">Auto</option>
+                  <option value="ollama">Ollama</option>
+                  <option value="claude">Claude</option>
+                  <option value="openai">OpenAI</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Conversation history -->
+            <div class="ask-history" id="ask-history"></div>
+
+            <!-- Input -->
+            <div class="ask-section-input-row">
+              <input
+                type="text"
+                class="ask-section-input"
+                id="ask-section-input"
+                placeholder="Ask about this codebase…"
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <button class="ask-section-btn" id="ask-section-btn">Ask</button>
+            </div>
+
+            <!-- Chips -->
+            <div class="ask-chips" id="ask-chips">
+              <button class="ask-chip" data-q="How does routing work?" data-tooltip="Click to ask this question instantly">How does routing work?</button>
+              <button class="ask-chip" data-q="What are the main entry points?" data-tooltip="Click to ask this question instantly">What are the main entry points?</button>
+              <button class="ask-chip" data-q="Which dependencies need updating?" data-tooltip="Click to ask this question instantly">Which dependencies need updating?</button>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ── Modules ────────────────────────────────────── -->
+        <section id="section-modules" class="section">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Modules</h2>
+              <span class="card-count" id="modules-count"></span>
+            </div>
+            <div class="modules-list" id="modules-list"></div>
+          </div>
+        </section>
+
+        <!-- ── Code Map ───────────────────────────────────── -->
+        <section id="section-codemap" class="section section-codemap">
+          <div class="codemap-wrapper">
+            <div class="codemap-header">
+              <span class="codemap-title">Code Map</span>
+              <span class="codemap-hint">Scroll to zoom · Drag to pan · Click node for details</span>
+            </div>
+            <div class="codemap-body">
+              <div class="codemap-graph" id="codemap-graph">
+                <div class="codemap-loading" id="codemap-loading">Building map…</div>
+              </div>
+              <aside class="codemap-panel" id="codemap-panel"></aside>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Dependencies ───────────────────────────────── -->
+        <section id="section-dependencies" class="section">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Dependencies</h2>
+              <div class="deps-tabs">
+                <button class="dep-tab active" data-type="all"  data-tooltip="Show all dependencies">All</button>
+                <button class="dep-tab" data-type="prod" data-tooltip="Only packages required to run your app">Production</button>
+                <button class="dep-tab" data-type="dev"  data-tooltip="Only packages used during development and testing">Development</button>
+              </div>
+            </div>
+            <div class="deps-list" id="deps-list"></div>
+          </div>
+        </section>
+
+        <!-- ── Conventions ────────────────────────────────── -->
+        <section id="section-conventions" class="section">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Conventions</h2>
+            </div>
+            <div class="conventions-grid" id="conventions-grid"></div>
+          </div>
+        </section>
+
+        <!-- ── Search ─────────────────────────────────────── -->
+        <section id="section-search" class="section">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Search</h2>
+            </div>
+            <div class="search-area">
+              <input
+                type="text"
+                class="search-input"
+                id="search-input"
+                placeholder="Search modules, dependencies, conventions..."
+                autocomplete="off"
+                spellcheck="false"
+              />
+              <p class="search-shortcut-hint">Press <kbd style="font-family:inherit;color:var(--text-secondary)">/</kbd> anywhere to focus search</p>
+              <div class="search-results" id="search-results"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Settings ──────────────────────────────────── -->
+        <section id="section-settings" class="section">
+
+          <!-- Section A: AI Providers -->
+          <div class="settings-section-title">AI Providers</div>
+
+          <div class="provider-cards-row">
+
+            <!-- Ollama -->
+            <div class="provider-card" id="provider-card-ollama">
+              <div class="provider-card-header">
+                <div class="provider-icon provider-icon-ollama">Ol</div>
+                <div class="provider-card-meta">
+                  <div class="provider-card-name">Ollama</div>
+                  <div class="provider-card-subtitle">Free, local, private</div>
+                </div>
+                <span class="provider-badge-recommended" data-tooltip="Ollama runs entirely on your machine. No API key needed. No data leaves your device. Free to use.">Recommended</span>
+              </div>
+
+              <div class="provider-status-row" id="ollama-status-row">
+                <span class="provider-status-dot" id="ollama-status-dot"></span>
+                <span class="provider-status-label" id="ollama-status-label">Checking…</span>
+              </div>
+
+              <!-- Running state -->
+              <div class="provider-running-state" id="ollama-running-state" style="display:none">
+                <div class="provider-field">
+                  <label class="provider-field-label">Model</label>
+                  <select class="provider-select" id="ollama-model-select">
+                    <option value="llama3">llama3</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Setup guide (shown when not running) -->
+              <div class="provider-setup-guide" id="ollama-setup-guide">
+                <div class="setup-step" id="ollama-setup-step-1">
+                  <span class="setup-step-num">1</span>
+                  <div>Download Ollama from <a class="setup-link" href="https://ollama.ai" target="_blank" rel="noopener">ollama.ai</a></div>
+                </div>
+                <div class="setup-step">
+                  <span class="setup-step-num">2</span>
+                  <div>
+                    <div class="setup-step-label">Pull a model:</div>
+                    <div class="code-block">
+                      <code id="ollama-pull-cmd">ollama pull llama3</code>
+                      <button class="copy-btn" data-copy="ollama pull llama3">Copy</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="setup-step">
+                  <span class="setup-step-num">3</span>
+                  <div>
+                    <div class="setup-step-label">Auto-detection active</div>
+                    <div class="polling-indicator" id="ollama-polling">
+                      <span class="polling-dot"></span> Checking every 3s…
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button class="provider-connect-btn" id="ollama-connect-btn">Connect</button>
+            </div>
+
+            <!-- Claude -->
+            <div class="provider-card" id="provider-card-claude">
+              <div class="provider-card-header">
+                <div class="provider-icon provider-icon-claude">Cl</div>
+                <div class="provider-card-meta">
+                  <div class="provider-card-name">Claude</div>
+                  <div class="provider-card-subtitle">Anthropic, powerful reasoning</div>
+                </div>
+                <div class="provider-status-compact">
+                  <span class="provider-status-dot" id="claude-status-dot"></span>
+                  <span id="claude-status-label">Not configured</span>
+                </div>
+              </div>
+
+              <div class="provider-field">
+                <label class="provider-field-label">API Key</label>
+                <div class="provider-key-row">
+                  <input type="password" class="provider-input" id="claude-api-key"
+                    placeholder="sk-ant-…" autocomplete="off" spellcheck="false" />
+                  <button class="show-key-btn" data-target="claude-api-key" data-tooltip="Show or hide your API key">show</button>
+                </div>
+              </div>
+
+              <div class="provider-field">
+                <label class="provider-field-label">Model</label>
+                <select class="provider-select" id="claude-model-select">
+                  <option value="claude-sonnet-4-20250514">claude-sonnet (Recommended)</option>
+                  <option value="claude-opus-4-20250514">claude-opus (Most powerful)</option>
+                  <option value="claude-haiku-4-5">claude-haiku (Fastest)</option>
+                </select>
+              </div>
+
+              <div class="provider-test-result" id="claude-test-result"></div>
+
+              <div class="provider-actions">
+                <button class="provider-save-btn" id="claude-save-btn">Save</button>
+                <button class="provider-test-btn" id="claude-test-btn" data-tooltip="Sends a test request to verify your API key is valid and the service is reachable.">Test connection</button>
+              </div>
+            </div>
+
+            <!-- OpenAI -->
+            <div class="provider-card" id="provider-card-openai">
+              <div class="provider-card-header">
+                <div class="provider-icon provider-icon-openai">OA</div>
+                <div class="provider-card-meta">
+                  <div class="provider-card-name">OpenAI</div>
+                  <div class="provider-card-subtitle">GPT-4o, widely compatible</div>
+                </div>
+                <div class="provider-status-compact">
+                  <span class="provider-status-dot" id="openai-status-dot"></span>
+                  <span id="openai-status-label">Not configured</span>
+                </div>
+              </div>
+
+              <div class="provider-field">
+                <label class="provider-field-label">API Key</label>
+                <div class="provider-key-row">
+                  <input type="password" class="provider-input" id="openai-api-key"
+                    placeholder="sk-…" autocomplete="off" spellcheck="false" />
+                  <button class="show-key-btn" data-target="openai-api-key" data-tooltip="Show or hide your API key">show</button>
+                </div>
+              </div>
+
+              <div class="provider-field">
+                <label class="provider-field-label">Model</label>
+                <select class="provider-select" id="openai-model-select">
+                  <option value="gpt-4o">gpt-4o (Recommended)</option>
+                  <option value="gpt-4-turbo">gpt-4-turbo</option>
+                  <option value="gpt-3.5-turbo">gpt-3.5-turbo (Fastest)</option>
+                </select>
+              </div>
+
+              <div class="provider-test-result" id="openai-test-result"></div>
+
+              <div class="provider-actions">
+                <button class="provider-save-btn" id="openai-save-btn">Save</button>
+                <button class="provider-test-btn" id="openai-test-btn" data-tooltip="Sends a test request to verify your API key is valid and the service is reachable.">Test connection</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active provider selector -->
+          <div class="active-provider-row">
+            <span class="active-provider-label">Active provider</span>
+            <div class="active-provider-tabs" id="active-provider-tabs">
+              <button class="active-tab active" data-p="auto" data-tooltip="Automatically selects the best available provider. Prefers Ollama when running locally for privacy.">Auto</button>
+              <button class="active-tab" data-p="ollama">Ollama</button>
+              <button class="active-tab" data-p="claude">Claude</button>
+              <button class="active-tab" data-p="openai">OpenAI</button>
+            </div>
+            <span class="active-provider-hint">Auto uses highest priority available provider</span>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- First-run wizard -->
+  <div class="firstrun-overlay" id="firstrun-overlay" style="display:none">
+    <div class="firstrun-modal">
+      <div class="firstrun-logo">sb</div>
+      <h2 class="firstrun-title">stackbrief is ready</h2>
+      <p class="firstrun-desc">Your codebase has been scanned.<br>Connect an AI provider to unlock intelligent answers about your code.</p>
+      <div class="firstrun-actions">
+        <button class="firstrun-btn firstrun-btn-primary" data-goto="ollama">
+          Try Ollama — Free &amp; Private
+        </button>
+        <button class="firstrun-btn firstrun-btn-secondary" data-goto="claude">Connect Claude</button>
+        <button class="firstrun-btn firstrun-btn-secondary" data-goto="openai">Connect OpenAI</button>
+      </div>
+      <button class="firstrun-skip" id="firstrun-skip">Skip for now — use dashboard only</button>
+    </div>
+  </div>
+
+  <!-- Scanning overlay -->
+  <div class="scanning-overlay" id="scanning-overlay">
+    <div class="scanning-label" id="scanning-label">Scanning…</div>
+    <div class="scanning-path" id="scanning-path"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" crossorigin="anonymous"></script>
+  <script src="app.js"></script>
+</body>
+</html>

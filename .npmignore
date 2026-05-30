@@ -1,0 +1,9 @@
+.git/
+.github/
+src/
+*.test.ts
+*.spec.ts
+coverage/
+.nyc_output/
+.DS_Store
+tsconfig.json

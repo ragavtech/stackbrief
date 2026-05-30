@@ -1,0 +1,54 @@
+{
+  "name": "stackbrief",
+  "version": "1.0.0",
+  "description": "Visual codebase intelligence for AI coding tools",
+  "main": "./dist/cli.js",
+  "bin": {
+    "stackbrief": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "cursor",
+    "mcp",
+    "codebase",
+    "context",
+    "developer-tools",
+    "ai",
+    "ollama",
+    "code-analysis"
+  ],
+  "author": "ragavtech",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ragavtech/stackbrief"
+  },
+  "homepage": "https://github.com/ragavtech/stackbrief",
+  "bugs": {
+    "url": "https://github.com/ragavtech/stackbrief/issues"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "open": "^9.1.0",
+    "glob": "^10.3.10",
+    "semver": "^7.5.4",
+    "chokidar": "^3.5.3",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "@types/semver": "^7.5.6",
+    "@types/ws": "^8.5.10",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
+  }
+}
