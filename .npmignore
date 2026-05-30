@@ -1,5 +1,6 @@
 .git/
 .github/
+.claude/
 src/
 *.test.ts
 *.spec.ts
