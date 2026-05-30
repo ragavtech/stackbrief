@@ -1,6 +1,6 @@
 {
   "name": "stackbrief",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Visual codebase intelligence for AI coding tools",
   "main": "./dist/cli.js",
   "bin": {
