@@ -49,6 +49,18 @@
     return str && str.length > len ? str.slice(0, len - 1) + '…' : (str || '');
   }
 
+  function showToast(message, isError = false) {
+    const toast = document.createElement('div');
+    toast.className = 'sb-toast' + (isError ? ' sb-toast-error' : '');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('sb-toast-visible'));
+    setTimeout(() => {
+      toast.classList.remove('sb-toast-visible');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
   // ─── Tooltip system ──────────────────────────────────────
 
   let _ttEl    = null; // single shared tooltip DOM node
@@ -420,15 +432,9 @@
     list.innerHTML = rows.map(m => {
       const fileLabel = m.fileCount + ' file' + (m.fileCount !== 1 ? 's' : '');
       const desc = getEnhancedModuleDesc(m);
-      const desc2 = m.description;
-
-      // Language badge only for non-JS projects (JS is default, no noise)
-      const langBadge = (m.primaryLanguage && m.primaryLanguage !== 'Unknown' && m.primaryLanguage !== 'JavaScript')
-        ? `<span class="tag tag-muted">${escHtml(m.primaryLanguage)}</span>` : '';
-
-      const typeBadge = m.moduleType ? `<span class="tag tag-type">${escHtml(m.moduleType)}</span>` : '';
 
       if (m.isChild) {
+        // Child rows: file count only — no type or language badges
         const childName = m.path.split('/').pop();
         const parentPrefix = m.parentPath ? m.parentPath + '/' : '';
         return `
@@ -440,11 +446,14 @@
             <div class="module-row-right">
               <span class="module-row-count" style="color:var(--text-primary);font-weight:500"
                 data-tooltip="Total files detected in this module">${escHtml(fileLabel)}</span>
-              ${typeBadge}${langBadge}
             </div>
           </div>
         `;
       }
+
+      // Parent rows: language badge only for non-JS (JS is assumed default)
+      const langBadge = (m.primaryLanguage && m.primaryLanguage !== 'Unknown' && m.primaryLanguage !== 'JavaScript')
+        ? `<span class="tag tag-muted">${escHtml(m.primaryLanguage)}</span>` : '';
 
       return `
         <div class="module-row">
@@ -452,7 +461,7 @@
           <div class="module-row-desc">${escHtml(desc)}</div>
           <div class="module-row-right">
             <span class="module-row-count" style="color:var(--text-primary);font-weight:500">${escHtml(fileLabel)}</span>
-            ${typeBadge}${langBadge}
+            ${langBadge}
           </div>
         </div>
       `;
@@ -569,36 +578,57 @@
     const items = (deps && deps.dependencies) || [];
 
     list.innerHTML = items.map(d => {
-      const latest     = versions && versions[d.name];
-      const hasUpdate  = latest && semverGt(latest, d.version) && d.type === 'prod';
-      const pkgDesc    = getPackageDesc(d);
-      const typeLabel  = d.type === 'prod' ? 'Production dependency' : 'Development only';
+      const latest    = versions && versions[d.name];
+      const hasUpdate = latest && semverGt(latest, d.version) && d.type === 'prod';
+      const pkgDesc   = getPackageDesc(d);
 
-      // Version column: plain when up to date, amber arrow when update available
+      // Fix 2: Version column — current in muted; → latest in amber when update available
       const versionCol = hasUpdate
-        ? `<div class="dep-version-col"><span>${escHtml(d.version)}</span><span class="dep-update-arrow"> → </span><span class="dep-latest">${escHtml(latest)}</span></div>`
-        : `<div class="dep-version-col">${escHtml(d.version)}</div>`;
+        ? `<div class="dep-version-col">
+             <span class="dep-ver-current">${escHtml(d.version)}</span>
+             <span class="dep-ver-arrow"> → </span>
+             <span class="dep-ver-latest">${escHtml(latest)}</span>
+           </div>`
+        : `<div class="dep-version-col dep-version-stable">${escHtml(d.version)}</div>`;
 
-      // Right: "Update available" only when needed; no badge for stable
+      // Fix 3: Two-line environment label with tooltip
+      const isProd  = d.type === 'prod';
+      const envMain = isProd ? 'Production' : 'Development';
+      const envSub  = isProd ? 'Ships with your app' : 'Build and test only';
+      const envTip  = isProd
+        ? 'This package runs in your live application. Your users depend on it being installed.'
+        : 'Only used during development, testing, or building. Not included when your app is deployed.';
+
+      // Fix 4: Update button (only for prod packages with an available update)
+      const updateBtn = hasUpdate
+        ? `<button class="dep-update-btn"
+              data-pkg="${escHtml(d.name)}"
+              data-latest="${escHtml(latest)}"
+              data-tooltip="Install the latest version of this package">Update</button>`
+        : '';
+
       const updateLabel = hasUpdate
-        ? `<span class="dep-update-label" data-tooltip="A newer version is available on npm."
-            >Update available</span>` : '';
+        ? `<span class="dep-update-label">Update available</span>` : '';
 
       return `
-        <div class="dep-row" data-type="${d.type}">
+        <div class="dep-row" data-type="${d.type}" data-pkg="${escHtml(d.name)}">
           <div class="dep-left">
             <div class="dep-package-name">${escHtml(d.name)}</div>
             ${pkgDesc ? `<div class="dep-package-desc">${escHtml(pkgDesc)}</div>` : ''}
           </div>
           ${versionCol}
           <div class="dep-meta">
-            ${updateLabel}
-            <span class="dep-type-label">${typeLabel}</span>
+            <div class="dep-update-row">${updateLabel}${updateBtn}</div>
+            <div class="dep-env-label" data-tooltip="${escHtml(envTip)}">
+              <span class="dep-env-main">${envMain}</span>
+              <span class="dep-env-sub">${envSub}</span>
+            </div>
           </div>
         </div>
       `;
     }).join('');
 
+    // Tab filtering
     document.querySelectorAll('.dep-tab').forEach(tab => {
       tab.addEventListener('click', function () {
         document.querySelectorAll('.dep-tab').forEach(t => t.classList.remove('active'));
@@ -607,6 +637,54 @@
         filterDeps(currentDepFilter);
       });
     });
+
+    // Fix 4: Update button click handlers
+    list.querySelectorAll('.dep-update-btn').forEach(btn => {
+      btn.addEventListener('click', async function () {
+        const pkgName  = this.dataset.pkg;
+        const latest   = this.dataset.latest;
+        const row      = this.closest('.dep-row');
+        const orig     = this.textContent;
+
+        this.textContent = 'Updating…';
+        this.disabled    = true;
+
+        try {
+          const res = await fetch('/api/dependencies/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              package: pkgName,
+              version: 'latest',
+              projectPath: analysisData?.rootDir || ''
+            })
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            // Update version display in-place
+            const verCol = row?.querySelector('.dep-version-col');
+            if (verCol) {
+              verCol.className   = 'dep-version-col dep-version-stable';
+              verCol.textContent = data.newVersion || latest;
+            }
+            // Remove update row
+            row?.querySelector('.dep-update-row')?.remove();
+            showToast(`${pkgName} updated to ${data.newVersion || latest}`);
+          } else {
+            this.textContent = orig;
+            this.disabled    = false;
+            showToast(`Update failed. Try manually:\nnpm install ${pkgName}@latest`, true);
+          }
+        } catch {
+          this.textContent = orig;
+          this.disabled    = false;
+          showToast(`Update failed. Try manually:\nnpm install ${pkgName}@latest`, true);
+        }
+      });
+    });
+
+    initTooltips(list);
   }
 
   function filterDeps(type) {

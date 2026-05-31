@@ -1795,3 +1795,80 @@ mark {
   gap: 12px;
   margin-bottom: 16px;
 }
+
+/* ─── Dependency version column (fixes 2) ──────────────────── */
+
+.dep-ver-current { color: #4a6060; }
+.dep-ver-arrow   { color: #3a5050; }
+.dep-ver-latest  { color: #BA7517; font-weight: 500; }
+.dep-version-stable { color: #4a6060; }
+
+/* ─── Two-line environment label (fix 3) ─────────────────────── */
+
+.dep-update-row {
+  display: flex; align-items: center; gap: 8px; min-height: 18px;
+}
+
+.dep-env-label {
+  display: flex; flex-direction: column; gap: 1px;
+  cursor: default;
+}
+
+.dep-env-main {
+  font-size: 12px; color: #4a6060; font-weight: 400;
+}
+
+.dep-env-sub {
+  font-size: 11px; color: #3a5050;
+}
+
+/* ─── Update button (fix 4) ──────────────────────────────────── */
+
+.dep-update-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  background: transparent;
+  border: 0.5px solid #BA7517;
+  color: #BA7517;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dep-update-btn:hover    { background: rgba(186,117,23,0.08); }
+.dep-update-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ─── Success / error toast ──────────────────────────────────── */
+
+.sb-toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--accent);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  max-width: 320px;
+  white-space: pre-line;
+  line-height: 1.5;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+
+.sb-toast.sb-toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sb-toast.sb-toast-error {
+  background: #1a1408;
+  border: 0.5px solid #BA7517;
+  color: #BA7517;
+}
