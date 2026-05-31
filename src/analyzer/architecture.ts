@@ -114,6 +114,15 @@ function findEntryPoints(scan: ScanResult, stack: DetectedStack): string[] {
   ).slice(0, 3);
 }
 
+/**
+ * Infers the architectural pattern of the codebase by examining directory
+ * structure and file patterns. Detects MVC, Layered, Feature-based,
+ * Domain-Driven, Clean Architecture, Serverless, and Monolithic patterns.
+ *
+ * @param scan - Raw scan result with file list and package.json
+ * @param stack - Already-detected stack information
+ * @returns ArchitectureResult with pattern, framework, database, auth, etc.
+ */
 export function analyzeArchitecture(scan: ScanResult, stack: DetectedStack): ArchitectureResult {
   // Get immediate subdirectories of root and src/
   const dirSet = new Set<string>();

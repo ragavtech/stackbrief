@@ -48,6 +48,14 @@ function printStep(step: string) {
   process.stdout.write(`  → ${step}\n`);
 }
 
+/**
+ * Generates a structured CLAUDE.md file from the analysis result.
+ * This file is written to the scanned project's root directory
+ * so Claude Code and Cursor can use it as persistent project context.
+ *
+ * @param analysis - The complete analysis of the scanned codebase
+ * @returns Formatted Markdown string ready to write to CLAUDE.md
+ */
 function generateClaudeMd(analysis: AnalysisResult): string {
   const { architecture, dependencies, conventions, modules, stack, repoName } = analysis;
 
@@ -110,6 +118,13 @@ function generateClaudeMd(analysis: AnalysisResult): string {
   return lines.join('\n') + '\n';
 }
 
+/**
+ * Main scan pipeline: scans the target directory, runs all analyzers,
+ * writes CLAUDE.md, starts the Express dashboard and MCP servers,
+ * then opens the browser.
+ *
+ * @param targetDir - Absolute path to the directory to scan
+ */
 async function runScan(targetDir: string) {
   printBanner();
 

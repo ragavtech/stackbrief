@@ -260,8 +260,9 @@ export function createRoutes(analysisRef: { current: AnalysisResult }): Router {
   });
 
   router.post('/config/provider/:name/test', async (req: Request, res: Response) => {
-    const name = req.params.name as 'ollama' | 'claude' | 'openai';
+    const name  = req.params.name as string;
     const start = Date.now();
+    const { askCustomProvider } = await import('../ai/providers/custom');
 
     try {
       if (name === 'ollama') {
@@ -287,6 +288,17 @@ export function createRoutes(analysisRef: { current: AnalysisResult }): Router {
         const key = getProviderKey('openai');
         if (!key) { res.json({ success: false, error: 'No API key configured' }); return; }
         await askOpenAI('test', TEST_PROMPT, key, 'gpt-4o-mini');
+        res.json({ success: true, latency: Date.now() - start });
+        return;
+      }
+
+      if (name === 'local' || name === 'custom') {
+        const p = name === 'local' ? cfg.ai.providers.local : cfg.ai.providers.custom;
+        const baseUrl = (p as { url?: string }).url || '';
+        const model   = p.model;
+        const apiKey  = p.apiKey;
+        if (!baseUrl || !model) { res.json({ success: false, error: 'Configure base URL and model first' }); return; }
+        await askCustomProvider('test', TEST_PROMPT, { baseUrl, model, apiKey });
         res.json({ success: true, latency: Date.now() - start });
         return;
       }

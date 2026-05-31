@@ -122,6 +122,14 @@ function tryReadJson(filePath: string): Record<string, unknown> | undefined {
   }
 }
 
+/**
+ * Recursively walks a directory and returns structured metadata about every
+ * relevant source file. Skips node_modules, .git, dist, and other non-source
+ * directories. Reads file content for source files under 64KB.
+ *
+ * @param rootDir - Absolute path to the root directory to scan
+ * @returns ScanResult containing all discovered files and their content
+ */
 export function scanDirectory(rootDir: string): ScanResult {
   const absoluteRoot = path.resolve(rootDir);
   const files: ScannedFile[] = [];

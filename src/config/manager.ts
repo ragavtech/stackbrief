@@ -13,11 +13,13 @@ export interface ProviderConfig {
 }
 
 export interface AIConfig {
-  activeProvider: 'auto' | 'ollama' | 'claude' | 'openai';
+  activeProvider: 'auto' | 'ollama' | 'claude' | 'openai' | 'local' | 'custom';
   providers: {
-    ollama: ProviderConfig;
-    claude: ProviderConfig;
-    openai: ProviderConfig;
+    ollama:  ProviderConfig;
+    claude:  ProviderConfig;
+    openai:  ProviderConfig;
+    local:   ProviderConfig & { url?: string };
+    custom:  ProviderConfig & { name?: string; url?: string };
   };
 }
 
@@ -31,9 +33,11 @@ const DEFAULT_CONFIG: StackbriefConfig = {
   ai: {
     activeProvider: 'auto',
     providers: {
-      ollama: { enabled: false, model: 'llama3',                   url: 'http://localhost:11434' },
-      claude: { enabled: false, model: 'claude-sonnet-4-20250514', apiKey: '' },
-      openai: { enabled: false, model: 'gpt-4o',                   apiKey: '' },
+      ollama:  { enabled: false, model: 'llama3',                   url: 'http://localhost:11434' },
+      claude:  { enabled: false, model: 'claude-sonnet-4-20250514', apiKey: '' },
+      openai:  { enabled: false, model: 'gpt-4o',                   apiKey: '' },
+      local:   { enabled: false, model: '',      url: 'http://localhost:1234/v1' },
+      custom:  { enabled: false, model: '',      url: '', apiKey: '', name: '' },
     }
   },
   firstRunComplete: false,

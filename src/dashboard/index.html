@@ -124,7 +124,7 @@
           <!-- Ask AI -->
           <div class="ask-section" id="ask-section">
             <div class="ask-section-header">
-              <span class="ask-section-title">Ask AI</span>
+              <span class="ask-section-title">Ask your codebase</span>
               <div class="ask-header-right">
                 <div class="ai-provider-status" id="ai-provider-status">
                   <span class="ai-status-dot" id="ai-status-dot"></span>
@@ -136,8 +136,17 @@
                   <option value="ollama">Ollama</option>
                   <option value="claude">Claude</option>
                   <option value="openai">OpenAI</option>
+                  <option value="local">Local runner</option>
+                  <option value="custom">Custom</option>
                 </select>
               </div>
+            </div>
+
+            <!-- Ask description — hidden once chat starts -->
+            <div class="ask-description" id="ask-description">
+              <p>Most AI tools know nothing about your project. Every session starts from scratch. You explain your stack, your patterns, your decisions, every single time.</p>
+              <p>stackbrief changes that. When you connect an AI provider here, it gets a full briefing about this specific codebase before answering anything. It already knows your architecture, your conventions, your dependencies, and your module structure.</p>
+              <p>Ask it to add a new API route and it writes code that fits your folder structure and naming conventions. Ask it to fix a bug and it understands the context around that code. No explaining. No repeating yourself.</p>
             </div>
 
             <!-- Conversation history -->
@@ -170,11 +179,12 @@
         <section id="section-modules" class="section">
           <div class="card">
             <div class="card-header">
-              <div>
-                <h2 class="card-title">Modules</h2>
-                <p class="card-subtitle">How your codebase is organised into functional areas</p>
-              </div>
+              <h2 class="card-title">Modules</h2>
               <span class="card-count" id="modules-count"></span>
+            </div>
+            <p class="card-intro">How your codebase is organised into functional areas. Each module represents a distinct part of your project.</p>
+            <div class="col-headers col-headers-modules">
+              <span>Module</span><span>Purpose</span><span>Files</span>
             </div>
             <div class="modules-list" id="modules-list"></div>
           </div>
@@ -200,15 +210,16 @@
         <section id="section-dependencies" class="section">
           <div class="card">
             <div class="card-header">
-              <div>
-                <h2 class="card-title">Dependencies</h2>
-                <p class="card-subtitle">Packages your project depends on and their current versions</p>
-              </div>
+              <h2 class="card-title">Dependencies</h2>
               <div class="deps-tabs">
                 <button class="dep-tab active" data-type="all"  data-tooltip="Show all dependencies">All</button>
                 <button class="dep-tab" data-type="prod" data-tooltip="Only packages required to run your app">Production</button>
                 <button class="dep-tab" data-type="dev"  data-tooltip="Only packages used during development and testing">Development</button>
               </div>
+            </div>
+            <p class="card-intro">Packages your project depends on and their current versions compared against the latest available on npm.</p>
+            <div class="col-headers col-headers-deps">
+              <span>Package</span><span>Version</span><span>Environment</span>
             </div>
             <div class="deps-list" id="deps-list"></div>
           </div>
@@ -219,8 +230,8 @@
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">Conventions</h2>
-              <p class="card-subtitle">Patterns detected in your code that AI tools will follow when writing new code</p>
             </div>
+            <p class="card-intro">Coding patterns detected in your project. AI tools like Claude Code and Cursor will follow these exact conventions when writing new code for you, keeping your codebase consistent automatically.</p>
             <div class="conventions-grid" id="conventions-grid"></div>
           </div>
         </section>
@@ -391,6 +402,84 @@
             </div>
           </div>
 
+          <!-- Local runners card -->
+          <div class="provider-cards-row provider-cards-row-2">
+
+            <div class="provider-card" id="provider-card-local">
+              <div class="provider-card-header">
+                <div class="provider-icon provider-icon-local">LM</div>
+                <div class="provider-card-meta">
+                  <div class="provider-card-name">Local AI runners</div>
+                  <div class="provider-card-subtitle">LM Studio, AnythingLLM, and others</div>
+                </div>
+                <div class="provider-status-compact">
+                  <span class="provider-status-dot" id="local-status-dot"></span>
+                  <span id="local-status-label">Not configured</span>
+                </div>
+              </div>
+              <p style="font-size:12px;color:#4a6060;line-height:1.5;margin-bottom:12px">Already running LM Studio, AnythingLLM, or another local AI tool? Connect it here. Works with any OpenAI-compatible local runner.</p>
+              <div class="provider-field">
+                <label class="provider-field-label">Base URL</label>
+                <input type="text" class="provider-input" id="local-base-url"
+                  placeholder="http://localhost:1234/v1" autocomplete="off" spellcheck="false" />
+              </div>
+              <div class="provider-field">
+                <label class="provider-field-label">Model name</label>
+                <input type="text" class="provider-input" id="local-model"
+                  placeholder="llama3, qwen2.5-coder, mistral, etc" autocomplete="off" />
+              </div>
+              <div class="provider-test-result" id="local-test-result"></div>
+              <div class="provider-actions">
+                <button class="provider-save-btn" id="local-save-btn">Save</button>
+                <button class="provider-test-btn" id="local-test-btn">Test connection</button>
+              </div>
+            </div>
+
+            <!-- Custom / any OpenAI-compatible provider -->
+            <div class="provider-card" id="provider-card-custom">
+              <div class="provider-card-header">
+                <div class="provider-icon provider-icon-custom">OA</div>
+                <div class="provider-card-meta">
+                  <div class="provider-card-name">Custom provider</div>
+                  <div class="provider-card-subtitle">Groq, Mistral, Qwen, Together AI, and any OpenAI-compatible API</div>
+                </div>
+                <div class="provider-status-compact">
+                  <span class="provider-status-dot" id="custom-status-dot"></span>
+                  <span id="custom-status-label">Not configured</span>
+                </div>
+              </div>
+              <div class="provider-field">
+                <label class="provider-field-label">Provider name</label>
+                <input type="text" class="provider-input" id="custom-name"
+                  placeholder="Groq, Mistral, Qwen, etc" autocomplete="off" />
+              </div>
+              <div class="provider-field">
+                <label class="provider-field-label">Base URL</label>
+                <input type="text" class="provider-input" id="custom-base-url"
+                  placeholder="https://api.groq.com/openai/v1" autocomplete="off" spellcheck="false" />
+              </div>
+              <div class="provider-field">
+                <label class="provider-field-label">API Key</label>
+                <div class="provider-key-row">
+                  <input type="password" class="provider-input" id="custom-api-key"
+                    placeholder="sk-…" autocomplete="off" spellcheck="false" />
+                  <button class="show-key-btn" data-target="custom-api-key" data-tooltip="Show or hide your API key">show</button>
+                </div>
+              </div>
+              <div class="provider-field">
+                <label class="provider-field-label">Model</label>
+                <input type="text" class="provider-input" id="custom-model"
+                  placeholder="llama-3.1-70b-versatile" autocomplete="off" />
+              </div>
+              <div class="provider-test-result" id="custom-test-result"></div>
+              <div class="provider-actions">
+                <button class="provider-save-btn" id="custom-save-btn">Save</button>
+                <button class="provider-test-btn" id="custom-test-btn">Test connection</button>
+              </div>
+            </div>
+
+          </div>
+
           <!-- Active provider selector -->
           <div class="active-provider-row">
             <span class="active-provider-label">Active provider</span>
@@ -399,6 +488,8 @@
               <button class="active-tab" data-p="ollama">Ollama</button>
               <button class="active-tab" data-p="claude">Claude</button>
               <button class="active-tab" data-p="openai">OpenAI</button>
+              <button class="active-tab" data-p="local">Local</button>
+              <button class="active-tab" data-p="custom">Custom</button>
             </div>
             <span class="active-provider-hint">Auto uses highest priority available provider</span>
           </div>

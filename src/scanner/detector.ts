@@ -16,6 +16,14 @@ export interface DetectedStack {
   monorepo: boolean;
   hasDocker: boolean;
   hasCI: boolean;
+  // Quality signals
+  hasReadme: boolean;
+  hasContributing: boolean;
+  hasLicense: boolean;
+  hasGitignore: boolean;
+  hasDocsFolder: boolean;
+  hasClaudeMd: boolean;
+  hasCursorRules: boolean;
 }
 
 function dep(pkg: Record<string, unknown> | undefined, name: string): boolean {
@@ -150,6 +158,21 @@ export function detectStack(scan: ScanResult): DetectedStack {
     p === 'Jenkinsfile'
   );
 
+  // Quality signals — check root-level project health files
+  const hasReadme = hasFilePattern(files, p =>
+    p === 'README.md' || p === 'readme.md' || p === 'README' || p === 'Readme.md'
+  );
+  const hasContributing = hasFilePattern(files, p =>
+    p === 'CONTRIBUTING.md' || p === 'contributing.md' || p === 'CONTRIBUTING'
+  );
+  const hasLicense = hasFilePattern(files, p =>
+    p === 'LICENSE' || p === 'LICENSE.md' || p === 'license' || p === 'MIT-LICENSE'
+  ) || (packageJson?.license as string | undefined)?.toLowerCase().includes('mit') || false;
+  const hasGitignore = hasFilePattern(files, p => p === '.gitignore');
+  const hasDocsFolder = hasFilePattern(files, p => p.startsWith('docs/'));
+  const hasClaudeMd   = hasFilePattern(files, p => p === 'CLAUDE.md');
+  const hasCursorRules = hasFilePattern(files, p => p === '.cursorrules' || p === '.cursorignore');
+
   return {
     language,
     runtime,
@@ -165,6 +188,13 @@ export function detectStack(scan: ScanResult): DetectedStack {
     deployment,
     monorepo,
     hasDocker,
-    hasCI
+    hasCI,
+    hasReadme,
+    hasContributing,
+    hasLicense,
+    hasGitignore,
+    hasDocsFolder,
+    hasClaudeMd,
+    hasCursorRules,
   };
 }

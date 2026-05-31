@@ -3,6 +3,7 @@ import { detectProvider } from './detector';
 import { askClaude } from './providers/claude';
 import { askOpenAI } from './providers/openai';
 import { askOllama, AIResponse } from './providers/ollama';
+import { askCustomProvider } from './providers/custom';
 import { getProviderKey, getConfig } from '../config/manager';
 
 export function buildSystemPrompt(analysis: AnalysisResult): string {
@@ -73,6 +74,14 @@ export async function chat(
         cfg.ai.providers.openai.model);
     case 'ollama':
       return askOllama(question, systemPrompt, providerInfo.model ?? 'llama3');
+    case 'local':
+    case 'custom':
+      return askCustomProvider(question, systemPrompt, {
+        baseUrl:  providerInfo.baseUrl ?? 'http://localhost:1234/v1',
+        apiKey:   providerInfo.apiKey,
+        model:    providerInfo.model ?? 'llama3',
+        name:     providerInfo.displayName,
+      });
     default:
       throw new Error(`Unknown provider: ${providerInfo.provider}`);
   }

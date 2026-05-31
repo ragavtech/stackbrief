@@ -194,24 +194,33 @@
     let score = 40;
 
     // Foundations
-    if (dependencies.total > 0)                         score += 10; // has package.json
-    if (data.totalFiles > 20)                           score += 5;
+    if (dependencies.total > 0)                              score += 8;  // has package.json
+    if (data.totalFiles > 20)                                score += 5;
 
     // Tests
-    if (stack.testFramework)                            score += 8;
-    if (conventions.testingPattern !== 'No tests detected') score += 5;
+    if (stack.testFramework)                                 score += 7;
+    if (conventions.testingPattern !== 'No tests detected')  score += 5;
 
     // Code quality
-    if (stack.linter)                                   score += 5;
-    if (stack.language === 'TypeScript')                score += 8;
+    if (stack.linter)                                        score += 5;
+    if (stack.language === 'TypeScript')                     score += 8;
 
     // Architecture
-    if (modules.total >= 3)                             score += 5;
-    if (architecture.pattern && architecture.pattern !== 'Unknown') score += 5;
+    if (modules.total >= 3)                                  score += 4;
+    if (modules.total >= 5)                                  score += 3;
+    if (architecture.pattern && architecture.pattern !== 'Unknown') score += 3;
 
     // Infrastructure
-    if (architecture.hasCI)                             score += 8;
-    if (stack.framework)                                score += 5;
+    if (architecture.hasCI)                                  score += 7;
+    if (stack.framework)                                     score += 3;
+
+    // Quality signals (from stack detector)
+    if (stack.hasReadme)                                     score += 4;
+    if (stack.hasContributing)                               score += 3;
+    if (stack.hasLicense)                                    score += 2;
+    if (stack.hasGitignore)                                  score += 2;
+    if (stack.hasDocsFolder)                                 score += 4;
+    if (stack.hasClaudeMd || stack.hasCursorRules)           score += 5;
 
     return Math.min(100, Math.max(0, score));
   }
@@ -233,7 +242,12 @@
       const score = calculateScore(data);
       s.textContent = score;
       s.className = 'metric-value ' + (score >= 80 ? 'metric-value-good' : score >= 60 ? 'metric-value-warn' : 'metric-value-poor');
-      if (sd) sd.textContent = score >= 80 ? 'Well structured, AI ready' : score >= 60 ? 'Good structure, some gaps' : 'Needs improvement';
+      if (sd) sd.textContent =
+        score >= 94 ? 'Exceptional, fully AI ready' :
+        score >= 85 ? 'Strong codebase, AI ready' :
+        score >= 75 ? 'Good foundation, minor gaps' :
+        score >= 65 ? 'Needs some improvement' :
+        'Significant gaps detected';
     }
   }
 
@@ -839,11 +853,13 @@
     btn.disabled   = true;
     btn.textContent = '…';
 
-    // Hide chips after first question
+    // Hide chips and description after first question
     if (!askChipsHidden && chips) {
       chips.style.display = 'none';
       askChipsHidden = true;
     }
+    const descEl = document.getElementById('ask-description');
+    if (descEl) descEl.style.display = 'none';
 
     // Add loading pair to history
     const loadingPair = { question, answer: null, provider: null, model: null, loading: true };
@@ -1702,8 +1718,36 @@
       checkAIStatus();
     });
 
+    // Local runner save
+    document.getElementById('local-save-btn')?.addEventListener('click', async function () {
+      const baseUrl = document.getElementById('local-base-url')?.value?.trim();
+      const model   = document.getElementById('local-model')?.value?.trim();
+      this.textContent = 'Saving…'; this.disabled = true;
+      await fetch('/api/config/provider/local', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: baseUrl, model, enabled: true })
+      });
+      this.textContent = 'Saved'; setTimeout(() => { this.textContent = 'Save'; this.disabled = false; }, 1500);
+      checkAIStatus();
+    });
+
+    // Custom provider save
+    document.getElementById('custom-save-btn')?.addEventListener('click', async function () {
+      const name    = document.getElementById('custom-name')?.value?.trim();
+      const baseUrl = document.getElementById('custom-base-url')?.value?.trim();
+      const apiKey  = document.getElementById('custom-api-key')?.value?.trim();
+      const model   = document.getElementById('custom-model')?.value?.trim();
+      this.textContent = 'Saving…'; this.disabled = true;
+      await fetch('/api/config/provider/custom', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, url: baseUrl, apiKey, model, enabled: true })
+      });
+      this.textContent = 'Saved'; setTimeout(() => { this.textContent = 'Save'; this.disabled = false; }, 1500);
+      checkAIStatus();
+    });
+
     // Test connection buttons
-    ['claude', 'openai'].forEach(name => {
+    ['claude', 'openai', 'local', 'custom'].forEach(name => {
       document.getElementById(name + '-test-btn')?.addEventListener('click', async function () {
         const resultEl = document.getElementById(name + '-test-result');
         this.textContent = 'Testing…'; this.disabled = true;
