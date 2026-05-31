@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { ScanResult, ScannedFile } from './index';
 
 export interface DetectedStack {
@@ -24,6 +26,8 @@ export interface DetectedStack {
   hasDocsFolder: boolean;
   hasClaudeMd: boolean;
   hasCursorRules: boolean;
+  hasMcpServer: boolean;
+  hasPackageDescription: boolean;
 }
 
 function dep(pkg: Record<string, unknown> | undefined, name: string): boolean {
@@ -150,13 +154,25 @@ export function detectStack(scan: ScanResult): DetectedStack {
 
   const hasDocker = hasFile(files, 'Dockerfile') || hasFile(files, 'docker-compose.yml') || hasFile(files, 'docker-compose.yaml');
 
-  const hasCI = hasFilePattern(files, p =>
-    p.includes('.github/workflows') ||
-    p.includes('.gitlab-ci') ||
-    p === '.circleci/config.yml' ||
-    p === '.travis.yml' ||
-    p === 'Jenkinsfile'
-  );
+  const hasCI =
+    fs.existsSync(path.join(scan.rootDir, '.github', 'workflows')) ||
+    hasFilePattern(files, p =>
+      p.includes('.github/workflows') ||
+      p.includes('.gitlab-ci') ||
+      p === '.circleci/config.yml' ||
+      p === '.travis.yml' ||
+      p === 'Jenkinsfile'
+    );
+
+  // Has MCP server (mcp/ folder or 'mcp' in package keywords)
+  const hasMcpFolder = hasFilePattern(files, p => p.startsWith('mcp/'));
+  const pkgKeywords  = packageJson?.keywords as string[] | undefined;
+  const hasMcpKeyword = Array.isArray(pkgKeywords) && pkgKeywords.some(k => k === 'mcp');
+  const hasMcpServer = hasMcpFolder || hasMcpKeyword;
+
+  // Has a meaningful package.json description
+  const pkgDesc = packageJson?.description as string | undefined;
+  const hasPackageDescription = !!(pkgDesc && pkgDesc.trim().length > 5);
 
   // Quality signals — check root-level project health files
   const hasReadme = hasFilePattern(files, p =>
@@ -168,7 +184,8 @@ export function detectStack(scan: ScanResult): DetectedStack {
   const hasLicense = hasFilePattern(files, p =>
     p === 'LICENSE' || p === 'LICENSE.md' || p === 'license' || p === 'MIT-LICENSE'
   ) || (packageJson?.license as string | undefined)?.toLowerCase().includes('mit') || false;
-  const hasGitignore = hasFilePattern(files, p => p === '.gitignore');
+  // .gitignore isn't in SCAN_EXTENSIONS so use direct filesystem check
+  const hasGitignore = fs.existsSync(path.join(scan.rootDir, '.gitignore'));
   const hasDocsFolder = hasFilePattern(files, p => p.startsWith('docs/'));
   const hasClaudeMd   = hasFilePattern(files, p => p === 'CLAUDE.md');
   const hasCursorRules = hasFilePattern(files, p => p === '.cursorrules' || p === '.cursorignore');
@@ -196,5 +213,7 @@ export function detectStack(scan: ScanResult): DetectedStack {
     hasDocsFolder,
     hasClaudeMd,
     hasCursorRules,
+    hasMcpServer,
+    hasPackageDescription,
   };
 }

@@ -221,6 +221,8 @@
     if (stack.hasGitignore)                                  score += 2;
     if (stack.hasDocsFolder)                                 score += 4;
     if (stack.hasClaudeMd || stack.hasCursorRules)           score += 5;
+    if (stack.hasMcpServer)                                  score += 5;
+    if (stack.hasPackageDescription)                         score += 3;
 
     return Math.min(100, Math.max(0, score));
   }
@@ -377,6 +379,13 @@
     'seeds':         'Database seed data',
     'auth':          'Authentication and authorisation logic',
     'db':            'Database access and query layer',
+    // stackbrief-specific and common infrastructure folders
+    'mcp':           'MCP server for AI tool integration',
+    'ai':            'AI provider integrations',
+    'scanner':       'Codebase scanning and file traversal',
+    'analyzer':      'Code analysis and pattern detection',
+    'dashboard':     'Dashboard UI files (HTML, CSS, JS)',
+    'server':        'Express server setup and API routes',
     'domain':        'Core domain logic and business rules',
     'repositories':  'Data access repositories',
     'dto':           'Data Transfer Objects',
@@ -524,12 +533,27 @@
     'prettier':           'Opinionated code formatter',
     'typescript':         'Typed superset of JavaScript',
     'ts-node':            'TypeScript execution engine for Node.js',
+    'nodemon':            'Auto-restarts server on file changes',
     'react':              'Library for building user interfaces',
     'react-dom':          'React DOM rendering',
     'next':               'React framework for production',
     'vue':                'Progressive JavaScript UI framework',
     '@angular/core':      'Angular framework core',
     'svelte':             'Compile-time UI framework',
+    'open':               'Opens URLs in the default browser',
+    'compression':        'Gzip response compression middleware',
+    'multer':             'Multipart form-data and file upload handling',
+    'socket.io':          'Real-time bidirectional event communication',
+    'tailwindcss':        'Utility-first CSS framework',
+    'vite':               'Fast frontend build tool and dev server',
+    'webpack':            'JavaScript and asset module bundler',
+    'chalk':              'Terminal output string styling',
+    'commander':          'Command-line argument parsing framework',
+    'express-rate-limit': 'Rate limiting middleware for Express',
+    'glob':               'File pattern matching utility',
+    'semver':             'Semantic versioning parser and comparator',
+    'ws':                 'Fast WebSocket client and server library',
+    'chokidar':           'Cross-platform file watching library',
   };
 
   function getPackageDesc(d) {
