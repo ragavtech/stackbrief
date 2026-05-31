@@ -331,6 +331,51 @@
 
   // ─── Render modules list — full section (indented children, richer detail) ──
 
+  // Enhanced module descriptions for common folder names
+  const MODULE_DESC_ENHANCED = {
+    'test':          'Contains unit and integration tests for the project',
+    'tests':         'Contains unit and integration tests for the project',
+    '__tests__':     'Contains unit and integration tests for the project',
+    'spec':          'Contains test specifications',
+    'examples':      'Sample apps demonstrating how to use this library',
+    'example':       'Sample app demonstrating how to use this library',
+    'lib':           'Core library source code and utilities',
+    'src':           'Main application source code',
+    'app':           'Main application source code',
+    'api':           'API route handlers and middleware',
+    'components':    'Reusable UI components',
+    'pages':         'Page-level components and routes',
+    'routes':        'Route definitions and handlers',
+    'router':        'Request routing logic',
+    'controllers':   'Request controllers and handlers',
+    'models':        'Data models and schema definitions',
+    'services':      'Business logic and service layer',
+    'middleware':    'Express and HTTP middleware',
+    'utils':         'Utility functions and shared helpers',
+    'helpers':       'Helper functions and shared utilities',
+    'hooks':         'Custom React hooks',
+    'store':         'State management',
+    'config':        'Configuration and environment settings',
+    'scripts':       'Build scripts and automation tools',
+    'types':         'TypeScript type definitions',
+    'styles':        'CSS stylesheets and design tokens',
+    'migrations':    'Database schema migrations',
+    'seeds':         'Database seed data',
+    'auth':          'Authentication and authorisation logic',
+    'db':            'Database access and query layer',
+    'domain':        'Core domain logic and business rules',
+    'repositories':  'Data access repositories',
+    'dto':           'Data Transfer Objects',
+    'entities':      'Domain entities and data structures',
+    'features':      'Feature modules and domain areas',
+    'modules':       'Application modules',
+  };
+
+  function getEnhancedModuleDesc(m) {
+    const name = (m.path.split('/').pop() || '').toLowerCase();
+    return MODULE_DESC_ENHANCED[name] || m.description;
+  }
+
   function renderModulesList(modules) {
     const list = document.getElementById('modules-list');
     const countEl = document.getElementById('modules-count');
@@ -341,7 +386,6 @@
 
     const groups = groupModules(items);
 
-    // Flatten: parent row then its children in order
     const rows = [];
     groups.forEach(({ parent, children }) => {
       rows.push({ ...parent, isChild: false });
@@ -352,18 +396,14 @@
 
     list.innerHTML = rows.map(m => {
       const fileLabel = m.fileCount + ' file' + (m.fileCount !== 1 ? 's' : '');
+      const desc = getEnhancedModuleDesc(m);
+      const desc2 = m.description;
 
-      // Right-side badges
-      const badges = [
-        m.moduleType
-          ? `<span class="tag tag-type">${escHtml(m.moduleType)}</span>` : '',
-        m.hasTests
-          ? `<span class="tag tag-muted">tests</span>` : '',
-        m.hasIndex
-          ? `<span class="tag tag-muted">index</span>` : '',
-        (m.primaryLanguage && m.primaryLanguage !== 'Unknown')
-          ? `<span class="tag tag-muted">${escHtml(m.primaryLanguage)}</span>` : '',
-      ].filter(Boolean).join('');
+      // Language badge only for non-JS projects (JS is default, no noise)
+      const langBadge = (m.primaryLanguage && m.primaryLanguage !== 'Unknown' && m.primaryLanguage !== 'JavaScript')
+        ? `<span class="tag tag-muted">${escHtml(m.primaryLanguage)}</span>` : '';
+
+      const typeBadge = m.moduleType ? `<span class="tag tag-type">${escHtml(m.moduleType)}</span>` : '';
 
       if (m.isChild) {
         const childName = m.path.split('/').pop();
@@ -373,10 +413,11 @@
             <div class="module-row-path module-row-path-child">
               <span class="module-parent-prefix">${escHtml(parentPrefix)}</span>${escHtml(childName)}
             </div>
-            <div class="module-row-desc">${escHtml(m.description)}</div>
+            <div class="module-row-desc">${escHtml(desc)}</div>
             <div class="module-row-right">
-              <span class="module-row-count" data-tooltip="Total files detected in this module">${fileLabel}</span>
-              ${badges}
+              <span class="module-row-count" style="color:var(--text-primary);font-weight:500"
+                data-tooltip="Total files detected in this module">${escHtml(fileLabel)}</span>
+              ${typeBadge}${langBadge}
             </div>
           </div>
         `;
@@ -385,14 +426,100 @@
       return `
         <div class="module-row">
           <div class="module-row-path">${escHtml(m.path)}</div>
-          <div class="module-row-desc">${escHtml(m.description)}</div>
+          <div class="module-row-desc">${escHtml(desc)}</div>
           <div class="module-row-right">
-            <span class="module-row-count">${fileLabel}</span>
-            ${badges}
+            <span class="module-row-count" style="color:var(--text-primary);font-weight:500">${escHtml(fileLabel)}</span>
+            ${typeBadge}${langBadge}
           </div>
         </div>
       `;
     }).join('');
+  }
+
+  // Client-side package descriptions (override server description for common packages)
+  const PKG_DESC = {
+    'accepts':            'Parses HTTP Accept headers',
+    'body-parser':        'Parses HTTP request bodies',
+    'content-disposition':'Sets Content-Disposition headers',
+    'content-type':       'Parses and formats Content-Type headers',
+    'cookie':             'HTTP cookie parsing and serialisation',
+    'cookie-signature':   'Signs and verifies cookies',
+    'debug':              'Tiny debugging utility for Node.js',
+    'depd':               'Deprecation warnings helper',
+    'encodeurl':          'Encodes URLs while preserving path separators',
+    'escape-html':        'Escapes HTML special characters',
+    'etag':               'Generates HTTP ETags for caching',
+    'finalhandler':       'Final HTTP request handler for Express',
+    'fresh':              'Checks if HTTP response is still fresh',
+    'http-errors':        'Creates HTTP error objects',
+    'merge-descriptors':  'Merges JavaScript object descriptors',
+    'mime-types':         'Maps file extensions to MIME types',
+    'on-finished':        'Executes callback when HTTP request finishes',
+    'parseurl':           'Parses URL with caching for Express',
+    'proxy-addr':         'Determines real client address behind proxy',
+    'qs':                 'Parses and stringifies query strings',
+    'range-parser':       'Parses HTTP Range headers for partial content',
+    'router':             'URL router middleware',
+    'send':               'Streams files as HTTP responses',
+    'serve-static':       'Serves static files',
+    'setprototypeof':     'Sets prototype of an object',
+    'statuses':           'HTTP status code list',
+    'toidentifier':       'Converts a string to a valid identifier',
+    'type-is':            'Infers content-type of request bodies',
+    'utils-merge':        'Merges two objects together',
+    'vary':               'Sets the HTTP Vary header',
+    'express':            'Web framework for Node.js',
+    'fastify':            'Fast and efficient web framework',
+    'koa':                'Minimalist web framework by Express team',
+    'axios':              'HTTP client for browser and Node.js',
+    'dotenv':             'Loads environment variables from .env file',
+    'cors':               'Cross-origin resource sharing middleware',
+    'morgan':             'HTTP request logger middleware',
+    'helmet':             'Secures Express apps with HTTP headers',
+    'lodash':             'JavaScript utility function library',
+    'moment':             'Date and time parsing and formatting',
+    'date-fns':           'Modern JavaScript date utility library',
+    'dayjs':              'Lightweight date library with Moment.js API',
+    'uuid':               'Generates RFC-compliant UUIDs',
+    'joi':                'Schema description and data validation',
+    'zod':                'TypeScript-first schema validation',
+    'yup':                'JavaScript schema validation library',
+    'bcrypt':             'Hashes passwords using bcrypt algorithm',
+    'bcryptjs':           'Pure JavaScript bcrypt password hashing',
+    'jsonwebtoken':       'Signs and verifies JSON Web Tokens',
+    'passport':           'Authentication middleware for Node.js',
+    'mongoose':           'MongoDB object modelling for Node.js',
+    'sequelize':          'Promise-based Node.js ORM',
+    'typeorm':            'ORM for TypeScript and JavaScript',
+    'prisma':             'Next-generation Node.js and TypeScript ORM',
+    '@prisma/client':     'Auto-generated Prisma database client',
+    'pg':                 'PostgreSQL client for Node.js',
+    'mysql2':             'MySQL client with Promise support',
+    'redis':              'Redis client for Node.js',
+    'ioredis':            'Robust Redis client for Node.js',
+    'socket.io':          'Real-time bidirectional event-based communication',
+    'ws':                 'Simple WebSocket client and server',
+    'webpack':            'Static module bundler for JavaScript',
+    'vite':               'Next-generation frontend build tool',
+    'esbuild':            'Extremely fast JavaScript bundler',
+    'rollup':             'Module bundler for ES modules',
+    'jest':               'JavaScript testing framework by Meta',
+    'vitest':             'Vite-native unit testing framework',
+    'mocha':              'Feature-rich JavaScript test framework',
+    'eslint':             'Pluggable JavaScript linter',
+    'prettier':           'Opinionated code formatter',
+    'typescript':         'Typed superset of JavaScript',
+    'ts-node':            'TypeScript execution engine for Node.js',
+    'react':              'Library for building user interfaces',
+    'react-dom':          'React DOM rendering',
+    'next':               'React framework for production',
+    'vue':                'Progressive JavaScript UI framework',
+    '@angular/core':      'Angular framework core',
+    'svelte':             'Compile-time UI framework',
+  };
+
+  function getPackageDesc(d) {
+    return PKG_DESC[d.name] || (d.description && d.description !== d.name ? d.description : '');
   }
 
   // ─── Render dependencies ──────────────────────────────────
@@ -404,23 +531,32 @@
     const items = (deps && deps.dependencies) || [];
 
     list.innerHTML = items.map(d => {
-      const latest = versions && versions[d.name];
-      const hasUpdate = latest && semverGt(latest, d.version) && d.type === 'prod';
+      const latest     = versions && versions[d.name];
+      const hasUpdate  = latest && semverGt(latest, d.version) && d.type === 'prod';
+      const pkgDesc    = getPackageDesc(d);
+      const typeLabel  = d.type === 'prod' ? 'Production dependency' : 'Development only';
 
-      const versionHtml = hasUpdate
-        ? `<span class="dep-version-update"><span class="dep-version-current">${escHtml(d.version)}</span><span class="dep-version-arrow"> → </span><span class="dep-version-latest">${escHtml(latest)}</span></span>`
-        : `<span class="dep-version">${escHtml(d.version)}</span>`;
+      // Version column: plain when up to date, amber arrow when update available
+      const versionCol = hasUpdate
+        ? `<div class="dep-version-col"><span>${escHtml(d.version)}</span><span class="dep-update-arrow"> → </span><span class="dep-latest">${escHtml(latest)}</span></div>`
+        : `<div class="dep-version-col">${escHtml(d.version)}</div>`;
 
-      const statusTag = hasUpdate
-        ? '<span class="tag tag-amber" data-tooltip="A newer version is available on npm. Consider updating to get the latest fixes and improvements.">update</span>'
-        : '<span class="tag tag-green" data-tooltip="This package is up to date with the latest published version.">stable</span>';
+      // Right: "Update available" only when needed; no badge for stable
+      const updateLabel = hasUpdate
+        ? `<span class="dep-update-label" data-tooltip="A newer version is available on npm."
+            >Update available</span>` : '';
 
       return `
         <div class="dep-row" data-type="${d.type}">
-          <div class="dep-name">${escHtml(d.name)}</div>
-          ${versionHtml}
-          <div class="dep-desc">${escHtml(d.description)}</div>
-          <div class="dep-right">${statusTag}<span class="tag tag-muted">${d.type}</span></div>
+          <div class="dep-left">
+            <div class="dep-package-name">${escHtml(d.name)}</div>
+            ${pkgDesc ? `<div class="dep-package-desc">${escHtml(pkgDesc)}</div>` : ''}
+          </div>
+          ${versionCol}
+          <div class="dep-meta">
+            ${updateLabel}
+            <span class="dep-type-label">${typeLabel}</span>
+          </div>
         </div>
       `;
     }).join('');
@@ -453,6 +589,43 @@
     } catch { return {}; }
   }
 
+  // Convention context notes: what each detected value means for AI tools
+  function getConventionNote(label, value) {
+    const v = (value || '').toLowerCase();
+    if (label === 'naming style') {
+      if (v.includes('camelcase'))  return 'AI tools will use camelCase when writing new code for this project';
+      if (v.includes('snake_case')) return 'AI tools will use snake_case when writing new code for this project';
+      if (v.includes('kebab'))      return 'AI tools will use kebab-case when writing new code for this project';
+      if (v.includes('pascalcase')) return 'AI tools will use PascalCase when writing new code for this project';
+    }
+    if (label === 'async pattern') {
+      if (v.includes('callback'))   return 'Pre-Promise style. AI tools will write callback-based async code';
+      if (v.includes('async'))      return 'Modern async style. AI tools will use async/await in new code';
+      if (v.includes('promise'))    return 'Promise-based async. AI tools will use .then().catch() patterns';
+    }
+    if (label === 'error handling') {
+      if (v.includes('result') || v.includes('either')) return 'Functional error handling pattern detected';
+      if (v.includes('try'))        return 'Standard try/catch error handling. AI tools will follow this pattern';
+      if (v.includes('middleware')) return 'Express error middleware pattern. AI tools will add error handlers';
+    }
+    if (label === 'module system') {
+      if (v.includes('commonjs') || v.includes('require')) return 'Uses require() and module.exports. AI tools will use CommonJS imports';
+      if (v.includes('esm') || v.includes('import'))       return 'Uses import/export syntax. AI tools will use ES module imports';
+    }
+    if (label === 'validation') {
+      if (v.includes('manual'))  return 'No validation library detected. AI tools will write manual validation code';
+      if (v.includes('zod'))     return 'Zod validation detected. AI tools will use Zod schemas';
+      if (v.includes('joi'))     return 'Joi validation detected. AI tools will use Joi schemas';
+      if (v.includes('yup'))     return 'Yup validation detected. AI tools will use Yup schemas';
+    }
+    if (label === 'testing') {
+      if (v.includes('unit') && v.includes('integration')) return 'Has both unit and integration tests. AI tools will suggest test files alongside new code';
+      if (v.includes('unit'))  return 'Unit test suite detected. AI tools will suggest unit tests for new code';
+      if (v.includes('no test')) return 'No tests found. Consider adding tests before asking AI to extend your codebase';
+    }
+    return '';
+  }
+
   // ─── Render conventions ───────────────────────────────────
 
   function renderConventions(conventions) {
@@ -469,16 +642,21 @@
       { label: 'file layout',    value: conventions.fileOrganization },
     ];
 
-    // Dynamic column count: spread items evenly across rows
     const colCount = items.length <= 4 ? 2 : items.length <= 6 ? 3 : 4;
     grid.style.gridTemplateColumns = `repeat(${colCount}, 1fr)`;
 
-    grid.innerHTML = items.map(item => `
-      <div class="convention-item">
-        <div class="convention-label">${item.label}</div>
-        <div class="convention-value">${escHtml(item.value || '—')}</div>
-      </div>
-    `).join('');
+    grid.innerHTML = items.map(item => {
+      const note = getConventionNote(item.label, item.value);
+      const noteHtml = note
+        ? `<div class="convention-context">${escHtml(note)}</div>` : '';
+      return `
+        <div class="convention-item">
+          <div class="convention-label">${item.label}</div>
+          <div class="convention-value">${escHtml(item.value || '—')}</div>
+          ${noteHtml}
+        </div>
+      `;
+    }).join('');
   }
 
   // ─── Search ───────────────────────────────────────────────

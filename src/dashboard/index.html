@@ -170,7 +170,10 @@
         <section id="section-modules" class="section">
           <div class="card">
             <div class="card-header">
-              <h2 class="card-title">Modules</h2>
+              <div>
+                <h2 class="card-title">Modules</h2>
+                <p class="card-subtitle">How your codebase is organised into functional areas</p>
+              </div>
               <span class="card-count" id="modules-count"></span>
             </div>
             <div class="modules-list" id="modules-list"></div>
@@ -197,7 +200,10 @@
         <section id="section-dependencies" class="section">
           <div class="card">
             <div class="card-header">
-              <h2 class="card-title">Dependencies</h2>
+              <div>
+                <h2 class="card-title">Dependencies</h2>
+                <p class="card-subtitle">Packages your project depends on and their current versions</p>
+              </div>
               <div class="deps-tabs">
                 <button class="dep-tab active" data-type="all"  data-tooltip="Show all dependencies">All</button>
                 <button class="dep-tab" data-type="prod" data-tooltip="Only packages required to run your app">Production</button>
@@ -213,6 +219,7 @@
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">Conventions</h2>
+              <p class="card-subtitle">Patterns detected in your code that AI tools will follow when writing new code</p>
             </div>
             <div class="conventions-grid" id="conventions-grid"></div>
           </div>

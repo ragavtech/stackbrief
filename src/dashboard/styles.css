@@ -1650,3 +1650,89 @@ mark {
   font-size: 11px; color: #3a5050;
   margin-top: 28px; text-align: center; line-height: 1.5;
 }
+
+/* ─── Section subtitle under card heading ─────────────────── */
+
+.card-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* Card header tweak: allow left side to flex-column */
+.card-header > div:first-child {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Convention context note ─────────────────────────────── */
+/* Reuses step-example style — added here for explicitness */
+.convention-context {
+  font-size: 12px;
+  color: #3a5050;
+  font-style: italic;
+  margin-top: 6px;
+  padding-left: 8px;
+  border-left: 2px solid #1a2020;
+  line-height: 1.5;
+}
+
+/* ─── Dependency row — new layout ─────────────────────────── */
+
+.dep-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dep-package-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.dep-package-desc {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dep-version-col {
+  flex: 0 0 140px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: ui-monospace, 'SF Mono', monospace;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.dep-version-col .dep-update-arrow { color: var(--text-muted); }
+.dep-version-col .dep-latest       { color: #c4a855; }
+
+.dep-meta {
+  flex: 0 0 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.dep-update-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #c4a855;
+}
+
+.dep-type-label {
+  font-size: 11px;
+  color: #3a5050;
+  font-weight: 400;
+}
