@@ -596,41 +596,50 @@
       const hasUpdate = !!(latest && semverGt(latest, d.version) && d.type === 'prod');
       const pkgDesc   = getPackageDesc(d);
 
-      // Environment labels + tooltips
+      // Environment labels
       const isProd   = d.type === 'prod';
       const envMain  = isProd ? 'Production' : 'Development';
-      const envSub   = isProd ? 'Ships with your app' : 'Build and test only';
+      const envSub   = isProd ? 'Runs in your app' : 'Build and test only';
       const envTip   = isProd
-        ? 'This package runs in your live application. Your users depend on it being installed.'
-        : 'Only used during development, testing, or building. Not included when your app is deployed.';
+        ? 'Declared in "dependencies" in package.json. Required for your app to run — included in production deployments.'
+        : 'Declared in "devDependencies" in package.json. Only used locally for testing, linting, or building. Not installed when you deploy.';
 
-      // Version column + update badge
+      // Version column + micro-labels + update badge
       let versionHtml;
-      let badgeHtml = '';
 
       if (hasUpdate) {
         const utype = classifyUpdate(d.version, latest);
         updatesAvailable.push({ name: d.name, version: d.version, latest, utype });
 
-        const badgeLabels = { patch: 'patch', minor: 'minor', major: 'major' };
-        const badgeTips   = {
+        const badgeTips = {
           patch: 'Bug fix update. Low risk, generally safe to update.',
           minor: 'New features added. Medium risk, test before updating.',
           major: 'Breaking changes likely. High risk, review migration guide before updating.'
         };
 
-        badgeHtml = `<span class="dep-badge dep-badge--${utype}"
-          data-tooltip="${escHtml(badgeTips[utype])}">${badgeLabels[utype]}</span>`;
-
         versionHtml = `
           <div class="dep-version-col">
-            <span class="dep-ver-current">${escHtml(d.version)}</span>
-            <span class="dep-ver-arrow"> → </span>
-            <span class="dep-ver-latest">${escHtml(latest)}</span>
-            ${badgeHtml}
+            <span class="dep-ver-group">
+              <span class="dep-ver-label">current</span>
+              <span class="dep-ver-current">${escHtml(d.version)}</span>
+            </span>
+            <span class="dep-ver-arrow">→</span>
+            <span class="dep-ver-group">
+              <span class="dep-ver-label">latest</span>
+              <span class="dep-ver-latest">${escHtml(latest)}</span>
+            </span>
+            <span class="dep-badge dep-badge--${utype}"
+              data-tooltip="${escHtml(badgeTips[utype])}">${utype}</span>
           </div>`;
       } else {
-        versionHtml = `<div class="dep-version-col dep-version-stable">${escHtml(d.version)}</div>`;
+        const hasLatest = !!(latest);
+        versionHtml = `<div class="dep-version-col dep-version-stable">
+          <span class="dep-ver-group">
+            <span class="dep-ver-label">current</span>
+            <span class="dep-ver-current">${escHtml(d.version)}</span>
+          </span>
+          ${hasLatest ? `<span class="dep-ver-ok" data-tooltip="This is the latest published version on npm.">✓</span>` : ''}
+        </div>`;
       }
 
       // Expandable detail panel (built inline, shown on row click)
@@ -720,13 +729,30 @@
       });
     });
 
-    // Tab filtering
+    // Tab filtering + description
+    const TAB_DESCS = {
+      all:  '',
+      prod: "Showing packages from 'dependencies' in package.json. These run in your live application and are installed when someone uses your project.",
+      dev:  "Showing packages from 'devDependencies' in package.json. These are only used during development, testing, or building. Not included in production deployments."
+    };
+
+    function updateTabDesc(type) {
+      const el = document.getElementById('dep-tab-desc');
+      if (!el) return;
+      el.textContent = TAB_DESCS[type] || '';
+      el.style.display = TAB_DESCS[type] ? 'block' : 'none';
+    }
+
+    // Set initial state
+    updateTabDesc(currentDepFilter);
+
     document.querySelectorAll('.dep-tab').forEach(tab => {
       tab.addEventListener('click', function () {
         document.querySelectorAll('.dep-tab').forEach(t => t.classList.remove('active'));
         this.classList.add('active');
         currentDepFilter = this.dataset.type;
         filterDeps(currentDepFilter);
+        updateTabDesc(currentDepFilter);
       });
     });
 

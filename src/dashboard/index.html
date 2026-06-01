@@ -212,15 +212,16 @@
             <div class="card-header">
               <h2 class="card-title">Dependencies</h2>
               <div class="deps-tabs">
-                <button class="dep-tab active" data-type="all"  data-tooltip="Show all dependencies">All</button>
-                <button class="dep-tab" data-type="prod" data-tooltip="Only packages required to run your app">Production</button>
-                <button class="dep-tab" data-type="dev"  data-tooltip="Only packages used during development and testing">Development</button>
+                <button class="dep-tab active" data-type="all"  data-tooltip="Show all packages from both dependencies and devDependencies">All</button>
+                <button class="dep-tab" data-type="prod" data-tooltip="Packages listed in 'dependencies' — required for your app to run in production">Production deps</button>
+                <button class="dep-tab" data-type="dev"  data-tooltip="Packages listed in 'devDependencies' — only used locally for testing, linting, and building">Dev deps</button>
               </div>
             </div>
             <p class="card-intro">Packages your project depends on and their current versions compared against the latest available on npm.</p>
             <div id="deps-summary"></div>
+            <div id="dep-tab-desc" class="dep-tab-desc"></div>
             <div class="col-headers col-headers-deps">
-              <span>Package</span><span>Version</span><span>Environment</span>
+              <span>Package</span><span>Your version → Latest</span><span>Declared in</span>
             </div>
             <div class="deps-list" id="deps-list"></div>
           </div>
