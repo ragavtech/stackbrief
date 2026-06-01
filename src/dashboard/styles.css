@@ -1766,9 +1766,11 @@ mark {
 .col-headers-modules span:nth-child(2) { flex: 1; }
 .col-headers-modules span:nth-child(3) { flex: 0 0 80px; text-align: right; }
 
-.col-headers-deps span:nth-child(1)    { flex: 1; }
-.col-headers-deps span:nth-child(2)    { flex: 0 0 150px; }
-.col-headers-deps span:nth-child(3)    { flex: 0 0 180px; text-align: right; }
+.col-headers-deps { align-items: flex-start; }
+/* > direct-child combinator prevents the rule leaking into .col-ver-header's children */
+.col-headers-deps > span:nth-child(1)  { flex: 1; }
+.col-headers-deps > span:nth-child(2)  { flex: 0 0 160px; }
+.col-headers-deps > span:nth-child(3)  { flex: 0 0 180px; text-align: right; }
 
 /* ─── Ask your codebase description ──────────────────────── */
 
@@ -2103,15 +2105,18 @@ mark {
   gap: 2px;
 }
 
-/* Inherit uppercase/weight from .col-headers, then override line 2 */
-.col-ver-line1 { /* inherits styles from .col-headers */ }
+/* Line 1 inherits uppercase from .col-headers */
+.col-ver-line1 { line-height: 1.2; }
 
+/* Line 2: override ALL inherited text transforms and force single line */
 .col-ver-line2 {
-  font-size: 10px;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
   opacity: 0.85;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 /* ─── Dep row min-height consistency ─────────────────────── */
@@ -2143,7 +2148,7 @@ mark {
 /* ─── Summary banner count numbers ──────────────────────── */
 
 .deps-count-item {
-  margin-right: 12px;
+  margin-right: 16px;
   display: inline-flex;
   align-items: baseline;
   gap: 3px;
@@ -2152,9 +2157,17 @@ mark {
 .deps-count-item:last-child { margin-right: 0; }
 
 .deps-count-num {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
+
+/* Each number inherits colour from its parent badge type */
+.deps-count-patch .deps-count-num { color: #2E8B7A; }
+.deps-count-minor .deps-count-num { color: #BA7517; }
+.deps-count-major .deps-count-num { color: #C04B3A; }
+.deps-count-patch { font-size: 11px; }
+.deps-count-minor { font-size: 11px; }
+.deps-count-major { font-size: 11px; }
 
 /* ─── Update type legend ─────────────────────────────────── */
 
