@@ -36,6 +36,9 @@ That is it. The dashboard opens at `localhost:3000`.
 
 ## Screenshots
 
+### Welcome screen
+![Welcome](screenshots/welcome.png)
+
 ### Overview
 ![Overview](screenshots/overview.png)
 
@@ -45,8 +48,8 @@ That is it. The dashboard opens at `localhost:3000`.
 ### Dependencies
 ![Dependencies](screenshots/dependencies.png)
 
-### AI Chat Setup
-![AI Settings](screenshots/settings.png)
+### AI Settings
+![Settings](screenshots/settings.png)
 
 ---
 
