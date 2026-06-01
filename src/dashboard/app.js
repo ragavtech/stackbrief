@@ -569,6 +569,17 @@
     return PKG_DESC[d.name] || (d.description && d.description !== d.name ? d.description : '');
   }
 
+  // ─── Semver update classification ────────────────────────
+
+  function classifyUpdate(current, latest) {
+    const clean = v => String(v).replace(/[^0-9.]/g, '');
+    const pa = clean(current).split('.').map(n => parseInt(n) || 0);
+    const pb = clean(latest).split('.').map(n => parseInt(n) || 0);
+    if (pb[0] > pa[0]) return 'major';
+    if (pb[1] > pa[1]) return 'minor';
+    return 'patch';
+  }
+
   // ─── Render dependencies ──────────────────────────────────
 
   function renderDependencies(deps, versions) {
@@ -577,56 +588,137 @@
 
     const items = (deps && deps.dependencies) || [];
 
+    // Build list of packages with updates (for summary banner)
+    const updatesAvailable = [];
+
     list.innerHTML = items.map(d => {
       const latest    = versions && versions[d.name];
-      const hasUpdate = latest && semverGt(latest, d.version) && d.type === 'prod';
+      const hasUpdate = !!(latest && semverGt(latest, d.version) && d.type === 'prod');
       const pkgDesc   = getPackageDesc(d);
 
-      // Fix 2: Version column — current in muted; → latest in amber when update available
-      const versionCol = hasUpdate
-        ? `<div class="dep-version-col">
-             <span class="dep-ver-current">${escHtml(d.version)}</span>
-             <span class="dep-ver-arrow"> → </span>
-             <span class="dep-ver-latest">${escHtml(latest)}</span>
-           </div>`
-        : `<div class="dep-version-col dep-version-stable">${escHtml(d.version)}</div>`;
-
-      // Fix 3: Two-line environment label with tooltip
-      const isProd  = d.type === 'prod';
-      const envMain = isProd ? 'Production' : 'Development';
-      const envSub  = isProd ? 'Ships with your app' : 'Build and test only';
-      const envTip  = isProd
+      // Environment labels + tooltips
+      const isProd   = d.type === 'prod';
+      const envMain  = isProd ? 'Production' : 'Development';
+      const envSub   = isProd ? 'Ships with your app' : 'Build and test only';
+      const envTip   = isProd
         ? 'This package runs in your live application. Your users depend on it being installed.'
         : 'Only used during development, testing, or building. Not included when your app is deployed.';
 
-      // Fix 4: Update button (only for prod packages with an available update)
-      const updateBtn = hasUpdate
-        ? `<button class="dep-update-btn"
-              data-pkg="${escHtml(d.name)}"
-              data-latest="${escHtml(latest)}"
-              data-tooltip="Install the latest version of this package">Update</button>`
-        : '';
+      // Version column + update badge
+      let versionHtml;
+      let badgeHtml = '';
 
-      const updateLabel = hasUpdate
-        ? `<span class="dep-update-label">Update available</span>` : '';
+      if (hasUpdate) {
+        const utype = classifyUpdate(d.version, latest);
+        updatesAvailable.push({ name: d.name, version: d.version, latest, utype });
+
+        const badgeLabels = { patch: 'patch', minor: 'minor', major: 'major' };
+        const badgeTips   = {
+          patch: 'Bug fix update. Low risk, generally safe to update.',
+          minor: 'New features added. Medium risk, test before updating.',
+          major: 'Breaking changes likely. High risk, review migration guide before updating.'
+        };
+
+        badgeHtml = `<span class="dep-badge dep-badge--${utype}"
+          data-tooltip="${escHtml(badgeTips[utype])}">${badgeLabels[utype]}</span>`;
+
+        versionHtml = `
+          <div class="dep-version-col">
+            <span class="dep-ver-current">${escHtml(d.version)}</span>
+            <span class="dep-ver-arrow"> → </span>
+            <span class="dep-ver-latest">${escHtml(latest)}</span>
+            ${badgeHtml}
+          </div>`;
+      } else {
+        versionHtml = `<div class="dep-version-col dep-version-stable">${escHtml(d.version)}</div>`;
+      }
+
+      // Expandable detail panel (built inline, shown on row click)
+      let detailPanel = '';
+      if (hasUpdate) {
+        const utype = classifyUpdate(d.version, latest);
+        const explanations = {
+          patch: 'Patch update: bug fixes and security patches. Safe to apply.',
+          minor: 'Minor update: new features added. Should be backward compatible but test first.',
+          major: 'Major update: breaking changes are likely. Review the changelog carefully before updating.'
+        };
+        const updateCmd  = `npm install ${d.name}@${latest}`;
+        const npmUrl     = `https://www.npmjs.com/package/${encodeURIComponent(d.name)}`;
+        const changelogQ = `https://github.com/search?q=${encodeURIComponent(d.name + ' changelog')}`;
+
+        detailPanel = `
+          <div class="dep-detail-panel">
+            <div class="dep-detail-explanation">${escHtml(explanations[utype])}</div>
+            <div class="dep-detail-actions">
+              <button class="dep-detail-btn dep-detail-copy"
+                data-copy="${escHtml(updateCmd)}">Copy update command</button>
+              <a href="${escHtml(npmUrl)}" target="_blank" rel="noopener"
+                class="dep-detail-btn">View on npm ↗</a>
+              ${utype === 'major'
+                ? `<a href="${escHtml(changelogQ)}" target="_blank" rel="noopener"
+                    class="dep-detail-btn dep-detail-btn-muted">View changelog ↗</a>`
+                : ''}
+            </div>
+            <div class="dep-detail-note">Recommended: update in a development branch first, run your tests, then merge to production.</div>
+          </div>`;
+      }
 
       return `
-        <div class="dep-row" data-type="${d.type}" data-pkg="${escHtml(d.name)}">
-          <div class="dep-left">
-            <div class="dep-package-name">${escHtml(d.name)}</div>
-            ${pkgDesc ? `<div class="dep-package-desc">${escHtml(pkgDesc)}</div>` : ''}
-          </div>
-          ${versionCol}
-          <div class="dep-meta">
-            <div class="dep-update-row">${updateLabel}${updateBtn}</div>
-            <div class="dep-env-label" data-tooltip="${escHtml(envTip)}">
-              <span class="dep-env-main">${envMain}</span>
-              <span class="dep-env-sub">${envSub}</span>
+        <div class="dep-row${hasUpdate ? ' dep-row-has-update' : ''}" data-type="${d.type}">
+          <div class="dep-row-main">
+            <div class="dep-left">
+              <div class="dep-package-name">${escHtml(d.name)}</div>
+              ${pkgDesc ? `<div class="dep-package-desc">${escHtml(pkgDesc)}</div>` : ''}
+            </div>
+            ${versionHtml}
+            <div class="dep-meta">
+              <div class="dep-env-label" data-tooltip="${escHtml(envTip)}">
+                <span class="dep-env-main">${envMain}</span>
+                <span class="dep-env-sub">${envSub}</span>
+              </div>
             </div>
           </div>
+          ${detailPanel}
         </div>
       `;
     }).join('');
+
+    // Summary banner (rendered into #deps-summary after we know total updates)
+    renderDepsSummary(updatesAvailable);
+
+    // Expand / collapse detail panels on row click
+    list.querySelectorAll('.dep-row-has-update .dep-row-main').forEach(main => {
+      main.addEventListener('click', function () {
+        const row    = this.closest('.dep-row');
+        const panel  = row?.querySelector('.dep-detail-panel');
+        const isOpen = panel?.classList.contains('dep-detail-open');
+
+        // Close all open panels first
+        list.querySelectorAll('.dep-detail-panel.dep-detail-open').forEach(p => {
+          p.classList.remove('dep-detail-open');
+          p.closest('.dep-row')?.classList.remove('dep-row-expanded');
+        });
+
+        // Open this one if it was closed
+        if (!isOpen && panel) {
+          panel.classList.add('dep-detail-open');
+          row?.classList.add('dep-row-expanded');
+        }
+      });
+    });
+
+    // Copy command buttons in detail panels
+    list.querySelectorAll('.dep-detail-copy').forEach(btn => {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation(); // don't toggle the panel
+        const cmd = this.dataset.copy || '';
+        navigator.clipboard?.writeText(cmd);
+        const orig = this.textContent;
+        this.textContent = 'Copied!';
+        setTimeout(() => { this.textContent = orig; }, 1800);
+        showToast('Command copied to clipboard');
+      });
+    });
 
     // Tab filtering
     document.querySelectorAll('.dep-tab').forEach(tab => {
@@ -638,53 +730,52 @@
       });
     });
 
-    // Fix 4: Update button click handlers
-    list.querySelectorAll('.dep-update-btn').forEach(btn => {
-      btn.addEventListener('click', async function () {
-        const pkgName  = this.dataset.pkg;
-        const latest   = this.dataset.latest;
-        const row      = this.closest('.dep-row');
-        const orig     = this.textContent;
-
-        this.textContent = 'Updating…';
-        this.disabled    = true;
-
-        try {
-          const res = await fetch('/api/dependencies/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              package: pkgName,
-              version: 'latest',
-              projectPath: analysisData?.rootDir || ''
-            })
-          });
-          const data = await res.json();
-
-          if (data.success) {
-            // Update version display in-place
-            const verCol = row?.querySelector('.dep-version-col');
-            if (verCol) {
-              verCol.className   = 'dep-version-col dep-version-stable';
-              verCol.textContent = data.newVersion || latest;
-            }
-            // Remove update row
-            row?.querySelector('.dep-update-row')?.remove();
-            showToast(`${pkgName} updated to ${data.newVersion || latest}`);
-          } else {
-            this.textContent = orig;
-            this.disabled    = false;
-            showToast(`Update failed. Try manually:\nnpm install ${pkgName}@latest`, true);
-          }
-        } catch {
-          this.textContent = orig;
-          this.disabled    = false;
-          showToast(`Update failed. Try manually:\nnpm install ${pkgName}@latest`, true);
-        }
-      });
-    });
-
     initTooltips(list);
+  }
+
+  function renderDepsSummary(updates) {
+    const container = document.getElementById('deps-summary');
+    if (!container) return;
+
+    if (!updates.length) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const counts = { patch: 0, minor: 0, major: 0 };
+    updates.forEach(u => counts[u.utype]++);
+
+    // Patch packages for the "copy all patches" command
+    const patchPkgs = updates.filter(u => u.utype === 'patch')
+      .map(u => `${u.name}@${u.latest}`).join(' ');
+
+    const copyAllBtn = patchPkgs
+      ? `<button class="deps-copy-all-btn" data-copy="${escHtml('npm install ' + patchPkgs)}">
+           Copy all patch updates
+         </button>` : '';
+
+    container.innerHTML = `
+      <div class="deps-summary-banner">
+        <div>
+          <div class="deps-summary-count">${updates.length} update${updates.length !== 1 ? 's' : ''} available</div>
+          <div class="deps-summary-breakdown">
+            ${counts.patch ? `<span class="deps-count-patch">${counts.patch} patch</span>` : ''}
+            ${counts.minor ? `<span class="deps-count-minor">${counts.minor} minor</span>` : ''}
+            ${counts.major ? `<span class="deps-count-major">${counts.major} major</span>` : ''}
+          </div>
+        </div>
+        ${copyAllBtn}
+      </div>
+      <p class="deps-rescan-note">After updating packages, click Re-scan to refresh this view.</p>
+    `;
+
+    container.querySelector('.deps-copy-all-btn')?.addEventListener('click', function () {
+      navigator.clipboard?.writeText(this.dataset.copy || '');
+      const orig = this.textContent;
+      this.textContent = 'Copied!';
+      setTimeout(() => { this.textContent = orig.trim(); }, 1800);
+      showToast('Patch update commands copied');
+    });
   }
 
   function filterDeps(type) {

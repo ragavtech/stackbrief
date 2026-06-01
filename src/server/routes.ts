@@ -360,42 +360,5 @@ export function createRoutes(analysisRef: { current: AnalysisResult }): Router {
     res.json({ installed, running, models, ollamaPath });
   });
 
-  // ── Dependency update ─────────────────────────────────────
-
-  router.post('/dependencies/update', (req: Request, res: Response) => {
-    const { package: pkgName, version, projectPath } = req.body as {
-      package?: string; version?: string; projectPath?: string;
-    };
-
-    if (!pkgName) { res.status(400).json({ success: false, error: 'package name required' }); return; }
-
-    const targetDir = projectPath || process.cwd();
-
-    // Safety: must have package.json
-    if (!fs.existsSync(path.join(targetDir, 'package.json'))) {
-      res.json({ success: false, error: `No package.json found in ${targetDir}` });
-      return;
-    }
-
-    const cmd = `npm install ${pkgName}@${version || 'latest'}`;
-
-    exec(cmd, { cwd: targetDir, timeout: 120000 }, (err, _stdout, _stderr) => {
-      if (err) {
-        res.json({ success: false, error: err.message });
-        return;
-      }
-      // Read new version from updated package.json
-      try {
-        const pkg = JSON.parse(fs.readFileSync(path.join(targetDir, 'package.json'), 'utf-8'));
-        const allDeps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
-        const raw = allDeps[pkgName] as string | undefined;
-        const newVersion = raw ? raw.replace(/^[^0-9]*/, '') : (version || 'latest');
-        res.json({ success: true, newVersion });
-      } catch {
-        res.json({ success: true, newVersion: version || 'latest' });
-      }
-    });
-  });
-
   return router;
 }
