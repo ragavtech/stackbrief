@@ -61,6 +61,23 @@
     }, 3000);
   }
 
+  // Fix 4: richer toast for copy-all patches
+  function showRichToast(headline, body, command) {
+    const toast = document.createElement('div');
+    toast.className = 'sb-toast sb-toast-rich';
+    toast.innerHTML = `
+      <div class="sb-toast-headline">${escHtml(headline)}</div>
+      <div class="sb-toast-body">${escHtml(body)}</div>
+      <div class="sb-toast-cmd">${escHtml(command)}</div>
+    `;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('sb-toast-visible'));
+    setTimeout(() => {
+      toast.classList.remove('sb-toast-visible');
+      setTimeout(() => toast.remove(), 300);
+    }, 5000);
+  }
+
   // ─── Tooltip system ──────────────────────────────────────
 
   let _ttEl    = null; // single shared tooltip DOM node
@@ -632,11 +649,10 @@
               data-tooltip="${escHtml(badgeTips[utype])}">${utype}</span>
           </div>`;
       } else {
-        const hasLatest = !!(latest);
-        // Stable: clean version + teal checkmark — no micro-labels needed
+        // Fix 1: "Up to date" confirmation below version number
         versionHtml = `<div class="dep-version-col dep-version-stable">
           <span class="dep-ver-stable-num">${escHtml(d.version)}</span>
-          ${hasLatest ? `<span class="dep-ver-ok" data-tooltip="This is the latest published version on npm.">✓</span>` : ''}
+          ${latest ? `<span class="dep-ver-up-to-date">Up to date</span>` : ''}
         </div>`;
       }
 
@@ -644,27 +660,37 @@
       let detailPanel = '';
       if (hasUpdate) {
         const utype = classifyUpdate(d.version, latest);
-        const explanations = {
-          patch: 'Patch update: bug fixes and security patches. Safe to apply.',
-          minor: 'Minor update: new features added. Should be backward compatible but test first.',
-          major: 'Major update: breaking changes are likely. Review the changelog carefully before updating.'
-        };
-        const updateCmd  = `npm install ${d.name}@${latest}`;
-        const npmUrl     = `https://www.npmjs.com/package/${encodeURIComponent(d.name)}`;
-        const changelogQ = `https://github.com/search?q=${encodeURIComponent(d.name + ' changelog')}`;
+        const updateCmd    = `npm install ${d.name}@${latest}`;
+        const npmUrl       = `https://www.npmjs.com/package/${encodeURIComponent(d.name)}`;
+        const versionsUrl  = `https://www.npmjs.com/package/${encodeURIComponent(d.name)}?activeTab=versions`;
+        const majorVersion = latest.split('.')[0];
+        const searchQuery  = `${d.name} migration v${majorVersion}`;
+
+        // Fix 2: major gets a richer explanation with real link + copyable search
+        const explanationHtml = utype === 'major'
+          ? `Breaking changes are likely in this update. Before updating, check the
+             <a href="${escHtml(versionsUrl)}" target="_blank" rel="noopener"
+               class="dep-detail-link">changelog on npm ↗</a>
+             and test thoroughly in a development branch first.`
+          : utype === 'minor'
+            ? 'Minor update: new features added. Should be backward compatible but test first.'
+            : 'Patch update: bug fixes and security patches. Safe to apply.';
+
+        const majorSearchHtml = utype === 'major' ? `
+          <div class="dep-detail-search"
+            data-copy="${escHtml(searchQuery)}"
+            data-tooltip="Click to copy search query">Search for: <span>${escHtml(searchQuery)}</span></div>
+        ` : '';
 
         detailPanel = `
           <div class="dep-detail-panel">
-            <div class="dep-detail-explanation">${escHtml(explanations[utype])}</div>
+            <div class="dep-detail-explanation">${explanationHtml}</div>
+            ${majorSearchHtml}
             <div class="dep-detail-actions">
               <button class="dep-detail-btn dep-detail-copy"
                 data-copy="${escHtml(updateCmd)}">Copy update command</button>
               <a href="${escHtml(npmUrl)}" target="_blank" rel="noopener"
                 class="dep-detail-btn">View on npm ↗</a>
-              ${utype === 'major'
-                ? `<a href="${escHtml(changelogQ)}" target="_blank" rel="noopener"
-                    class="dep-detail-btn dep-detail-btn-muted">View changelog ↗</a>`
-                : ''}
             </div>
             <div class="dep-detail-note">Recommended: update in a development branch first, run your tests, then merge to production.</div>
           </div>`;
@@ -754,6 +780,16 @@
       });
     });
 
+    // Fix 2: copyable major migration search query
+    list.querySelectorAll('.dep-detail-search').forEach(el => {
+      el.addEventListener('click', function () {
+        navigator.clipboard?.writeText(this.dataset.copy || '');
+        const orig = this.querySelector('span')?.textContent;
+        if (this.querySelector('span')) this.querySelector('span').textContent = 'Copied!';
+        setTimeout(() => { if (this.querySelector('span') && orig) this.querySelector('span').textContent = orig; }, 1800);
+      });
+    });
+
     initTooltips(list);
   }
 
@@ -773,10 +809,12 @@
     const patchPkgs = updates.filter(u => u.utype === 'patch')
       .map(u => `${u.name}@${u.latest}`).join(' ');
 
+    const copyAllCmd = 'npm install ' + patchPkgs;
     const copyAllBtn = patchPkgs
-      ? `<button class="deps-copy-all-btn" data-copy="${escHtml('npm install ' + patchPkgs)}">
-           Copy all patch updates
-         </button>` : '';
+      ? `<div class="deps-copy-all-wrap">
+           <button class="deps-copy-all-btn" data-copy="${escHtml(copyAllCmd)}">Copy all patch updates</button>
+           <p class="deps-copy-helper">Copies an npm install command for all patch updates. Paste it in your project terminal.</p>
+         </div>` : '';
 
     container.innerHTML = `
       <div class="deps-summary-banner">
@@ -808,11 +846,17 @@
     `;
 
     container.querySelector('.deps-copy-all-btn')?.addEventListener('click', function () {
-      navigator.clipboard?.writeText(this.dataset.copy || '');
+      const cmd = this.dataset.copy || '';
+      navigator.clipboard?.writeText(cmd);
       const orig = this.textContent;
       this.textContent = 'Copied!';
       setTimeout(() => { this.textContent = orig.trim(); }, 1800);
-      showToast('Patch update commands copied');
+      // Fix 4: richer toast with the actual command
+      showRichToast(
+        'Copied to clipboard',
+        'Paste in your terminal inside your project folder to update all patch packages safely.',
+        cmd
+      );
     });
   }
 

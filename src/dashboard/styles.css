@@ -2192,3 +2192,115 @@ mark {
   font-size: 11px;
   color: #4a6060;
 }
+
+/* ─── Fix 1: Up to date confirmation ───────────────────────── */
+
+.dep-ver-up-to-date {
+  display: block;
+  font-size: 11px;
+  color: #2E8B7A;
+  margin-top: 2px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+}
+
+/* ─── Fix 2: Major migration search query ───────────────────── */
+
+.dep-detail-link {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.dep-detail-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-family: ui-monospace, 'SF Mono', monospace;
+  color: #4a6060;
+  background: #0a0f0f;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color 0.15s;
+  margin-top: 4px;
+}
+
+.dep-detail-search:hover { color: var(--text-primary); }
+
+/* ─── Fix 3: Environment column vertical alignment ──────────── */
+
+.dep-meta {
+  align-self: stretch;
+  justify-content: center;
+}
+
+.dep-env-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+}
+
+/* ─── Fix 4: Copy helper text + rich toast ──────────────────── */
+
+.deps-copy-all-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.deps-copy-helper {
+  font-size: 11px;
+  color: #3a5050;
+  text-align: right;
+  margin-top: 4px;
+  max-width: 220px;
+  line-height: 1.4;
+}
+
+.sb-toast-rich {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sb-toast-headline {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2E8B7A;
+}
+
+.sb-toast-body {
+  font-size: 11px;
+  color: #4a6060;
+  line-height: 1.45;
+}
+
+.sb-toast-cmd {
+  font-family: ui-monospace, 'SF Mono', monospace;
+  font-size: 11px;
+  color: #3a5050;
+  word-break: break-all;
+}
+
+/* ─── Fix 5: Version column alignment ───────────────────────── */
+
+/* Column header cell */
+.col-ver-header {
+  text-align: right;
+  padding-right: 16px;
+}
+
+/* Data cells */
+.dep-version-col {
+  justify-content: flex-end;
+  padding-right: 16px;
+}
+
+.dep-version-col.dep-version-stable {
+  flex-direction: column;
+  align-items: flex-end;
+}
