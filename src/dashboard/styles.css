@@ -2094,3 +2094,88 @@ mark {
   line-height: 1.5;
   display: none;
 }
+
+/* ─── Dep column header — two-line VERSION ───────────────── */
+
+.col-ver-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Inherit uppercase/weight from .col-headers, then override line 2 */
+.col-ver-line1 { /* inherits styles from .col-headers */ }
+
+.col-ver-line2 {
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  opacity: 0.85;
+}
+
+/* ─── Dep row min-height consistency ─────────────────────── */
+
+.dep-row-main {
+  min-height: 60px;
+  align-items: center;
+}
+
+/* ─── Stable version cell ────────────────────────────────── */
+
+.dep-ver-stable-num {
+  font-size: 13px;
+  color: #4a6060;
+  font-family: ui-monospace, 'SF Mono', monospace;
+}
+
+/* ─── Chevron alignment fix ──────────────────────────────── */
+
+.dep-row-has-update .dep-row-main::after {
+  align-self: center;
+  color: #3a5050;
+}
+
+.dep-row-has-update .dep-row-main:hover::after {
+  color: var(--accent);
+}
+
+/* ─── Summary banner count numbers ──────────────────────── */
+
+.deps-count-item {
+  margin-right: 12px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.deps-count-item:last-child { margin-right: 0; }
+
+.deps-count-num {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ─── Update type legend ─────────────────────────────────── */
+
+.deps-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  margin: 8px 22px 4px;
+  background: #0a0f0f;
+  border: 0.5px solid #1a2020;
+  border-radius: 5px;
+}
+
+.deps-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.deps-legend-text {
+  font-size: 11px;
+  color: #4a6060;
+}

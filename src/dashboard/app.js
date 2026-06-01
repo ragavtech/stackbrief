@@ -633,11 +633,9 @@
           </div>`;
       } else {
         const hasLatest = !!(latest);
+        // Stable: clean version + teal checkmark — no micro-labels needed
         versionHtml = `<div class="dep-version-col dep-version-stable">
-          <span class="dep-ver-group">
-            <span class="dep-ver-label">current</span>
-            <span class="dep-ver-current">${escHtml(d.version)}</span>
-          </span>
+          <span class="dep-ver-stable-num">${escHtml(d.version)}</span>
           ${hasLatest ? `<span class="dep-ver-ok" data-tooltip="This is the latest published version on npm.">✓</span>` : ''}
         </div>`;
       }
@@ -785,14 +783,28 @@
         <div>
           <div class="deps-summary-count">${updates.length} update${updates.length !== 1 ? 's' : ''} available</div>
           <div class="deps-summary-breakdown">
-            ${counts.patch ? `<span class="deps-count-patch">${counts.patch} patch</span>` : ''}
-            ${counts.minor ? `<span class="deps-count-minor">${counts.minor} minor</span>` : ''}
-            ${counts.major ? `<span class="deps-count-major">${counts.major} major</span>` : ''}
+            ${counts.patch ? `<span class="deps-count-item deps-count-patch"><span class="deps-count-num">${counts.patch}</span> patch</span>` : ''}
+            ${counts.minor ? `<span class="deps-count-item deps-count-minor"><span class="deps-count-num">${counts.minor}</span> minor</span>` : ''}
+            ${counts.major ? `<span class="deps-count-item deps-count-major"><span class="deps-count-num">${counts.major}</span> major</span>` : ''}
           </div>
         </div>
         ${copyAllBtn}
       </div>
       <p class="deps-rescan-note">After updating packages, click Re-scan to refresh this view.</p>
+      <div class="deps-legend">
+        <span class="deps-legend-item">
+          <span class="dep-badge dep-badge--patch">patch</span>
+          <span class="deps-legend-text">Bug fixes. Safe to update.</span>
+        </span>
+        <span class="deps-legend-item">
+          <span class="dep-badge dep-badge--minor">minor</span>
+          <span class="deps-legend-text">New features. Test before updating.</span>
+        </span>
+        <span class="deps-legend-item">
+          <span class="dep-badge dep-badge--major">major</span>
+          <span class="deps-legend-text">Breaking changes likely. Review carefully.</span>
+        </span>
+      </div>
     `;
 
     container.querySelector('.deps-copy-all-btn')?.addEventListener('click', function () {
