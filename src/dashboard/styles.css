@@ -2414,3 +2414,84 @@ mark {
 .col-headers-deps {
   padding-right: 12px;
 }
+
+/* ─── Column centre-alignment (final authority) ─────────────
+   Overrides all earlier conflicting rules for VERSION and
+   ENVIRONMENT column headers and their data cells.         */
+
+/* VERSION column header — centred */
+.col-ver-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* centre both lines */
+  text-align: center;
+  gap: 3px;
+}
+
+.col-ver-line1 {
+  text-align: center;
+}
+
+.col-ver-line2 {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* VERSION data cells — centred, horizontal layout preserved */
+.dep-version-col {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;  /* centre horizontally in the column */
+  padding-right: 0;
+}
+
+/* Stable rows: stack version + "Up to date" centred */
+.dep-version-col.dep-version-stable {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding-right: 0;
+}
+
+/* VERSION column header cell — fixed width, centred */
+.col-headers-deps > span:nth-child(2) {
+  flex: 0 0 200px;
+  text-align: center;
+  padding-right: 0;
+}
+
+/* ENVIRONMENT column header — centred */
+.col-headers-deps > span:nth-child(3) {
+  flex: 0 0 200px;
+  min-width: 200px;
+  text-align: center;
+  padding-right: 0;
+}
+
+/* ENVIRONMENT data cells — centred */
+.dep-meta {
+  flex: 0 0 200px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* centre the env label */
+  justify-content: center;
+  padding-right: 12px;       /* keep right-edge breathing room */
+  align-self: stretch;
+}
+
+.dep-env-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+}
+
+.dep-env-main,
+.dep-env-sub {
+  text-align: center;
+}
