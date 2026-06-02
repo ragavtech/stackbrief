@@ -2304,3 +2304,113 @@ mark {
   flex-direction: column;
   align-items: flex-end;
 }
+
+/* ─── Dependencies page layout fixes ────────────────────── */
+
+/* Fix 1: Copy all patch button — wider helper text, clean layout */
+.deps-copy-all-wrap {
+  max-width: 300px;
+  gap: 6px;
+}
+
+.deps-copy-helper {
+  max-width: 280px;
+  font-size: 11px;
+  color: #3a5050;
+  text-align: right;
+  line-height: 1.5;
+  margin-top: 0;
+}
+
+/* Fix 2: VERSION column header — consistent alignment and spacing */
+.col-ver-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  line-height: 1.2;
+}
+
+.col-ver-line1 {
+  font-size: 11px;
+  font-weight: 500;
+  color: #3a5050;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+}
+
+.col-ver-line2 {
+  font-size: 10px;
+  font-weight: 400;
+  color: #3a5050;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  display: block;
+  white-space: nowrap;
+}
+
+/* Fix 3: ENVIRONMENT column — wider, chevron always visible */
+.dep-meta {
+  flex: 0 0 200px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding-right: 8px;
+  align-self: stretch;
+}
+
+.col-headers-deps > span:nth-child(3) {
+  flex: 0 0 200px;
+  min-width: 200px;
+  text-align: right;
+  padding-right: 8px;
+}
+
+/* Ensure chevron has padding and is visible */
+.dep-row-has-update .dep-row-main::after {
+  content: '›';
+  color: #3a5050;
+  font-size: 16px;
+  margin-left: auto;
+  padding-left: 8px;
+  padding-right: 4px;
+  flex-shrink: 0;
+  align-self: center;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.dep-row-has-update .dep-row-main:hover::after { color: var(--accent); }
+.dep-row-expanded .dep-row-main::after        { transform: rotate(90deg); }
+
+/* Fix 4: Row height — normalize stable and update rows */
+.dep-row-main {
+  min-height: 64px;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Keep version col as horizontal flex row — do NOT change to column */
+.dep-version-col {
+  flex-direction: row;  /* restore: current → latest stays horizontal */
+  align-items: center;
+}
+
+/* Stable version: column flex for version + "Up to date" stacked */
+.dep-version-col.dep-version-stable {
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+
+/* Fix 5: Right side breathing room */
+.dep-row-main {
+  padding-right: 12px;
+}
+
+.col-headers-deps {
+  padding-right: 12px;
+}
