@@ -163,9 +163,10 @@ async function runScan(targetDir: string) {
 
   saveRecent(targetDir);
   printStep('Writing CLAUDE.md');
-  const claudeMdPath = path.join(process.cwd(), 'CLAUDE.md');
-  console.log(`  Scan target: ${process.cwd()}`);
-  console.log(`  Writing CLAUDE.md to: ${claudeMdPath}`);
+  // Always write CLAUDE.md to the directory being scanned, never to the
+  // package's own directory. targetDir is either the explicit argument or
+  // process.cwd() from where the user ran the command.
+  const claudeMdPath = path.join(targetDir, 'CLAUDE.md');
   const claudeMdContent = generateClaudeMd(analysis);
   fs.writeFileSync(claudeMdPath, claudeMdContent, 'utf-8');
 
