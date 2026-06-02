@@ -97,22 +97,36 @@ function saveRecent(dirPath: string): void {
   }
 }
 
-export function createRoutes(analysisRef: { current: AnalysisResult }): Router {
+export function createRoutes(analysisRef: { current: AnalysisResult | null }): Router {
   const router = Router();
 
+  // Returns null when no project has been scanned yet — frontend shows project picker
   router.get('/analysis', (_req, res) => {
+    if (!analysisRef.current) { res.json(null); return; }
     res.json(analysisRef.current);
-    // Kick off version fetching in background
     fetchAllVersions(analysisRef.current);
   });
 
-  router.get('/architecture', (_req, res) => res.json(analysisRef.current.architecture));
-  router.get('/dependencies', (_req, res) => res.json(analysisRef.current.dependencies));
-  router.get('/modules',      (_req, res) => res.json(analysisRef.current.modules));
-  router.get('/conventions',  (_req, res) => res.json(analysisRef.current.conventions));
+  router.get('/architecture', (_req, res) => {
+    if (!analysisRef.current) { res.status(404).json(null); return; }
+    res.json(analysisRef.current.architecture);
+  });
+  router.get('/dependencies', (_req, res) => {
+    if (!analysisRef.current) { res.status(404).json(null); return; }
+    res.json(analysisRef.current.dependencies);
+  });
+  router.get('/modules', (_req, res) => {
+    if (!analysisRef.current) { res.status(404).json(null); return; }
+    res.json(analysisRef.current.modules);
+  });
+  router.get('/conventions', (_req, res) => {
+    if (!analysisRef.current) { res.status(404).json(null); return; }
+    res.json(analysisRef.current.conventions);
+  });
 
   router.get('/meta', (_req, res) => {
     const a = analysisRef.current;
+    if (!a) { res.json(null); return; }
     res.json({
       repoName: a.repoName, rootDir: a.rootDir,
       scannedAt: a.scannedAt, totalFiles: a.totalFiles, stack: a.stack
@@ -121,8 +135,7 @@ export function createRoutes(analysisRef: { current: AnalysisResult }): Router {
 
   // npm latest versions
   router.get('/versions', async (_req, res) => {
-    if (!versionsFetched) {
-      // Start fetch if not started, return whatever we have so far
+    if (!versionsFetched && analysisRef.current) {
       fetchAllVersions(analysisRef.current);
     }
     const result: Record<string, string> = {};
@@ -218,6 +231,7 @@ export function createRoutes(analysisRef: { current: AnalysisResult }): Router {
   router.post('/chat', async (req: Request, res: Response) => {
     const { question, provider: forceProvider } = req.body as { question?: string; provider?: string };
     if (!question?.trim()) { res.status(400).json({ error: 'question is required' }); return; }
+    if (!analysisRef.current) { res.status(400).json({ error: 'No project scanned yet. Please scan a project first.' }); return; }
     try {
       const result = await chat(question.trim(), analysisRef.current, forceProvider);
       res.json(result);

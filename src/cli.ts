@@ -210,21 +210,66 @@ async function runScan(targetDir: string) {
   console.log('  Press Ctrl+C to stop\n');
 }
 
+/**
+ * Starts the server with NO scan data so the browser shows the project
+ * picker welcome screen. The user selects a folder there; the subsequent
+ * /api/scan POST call populates the dashboard without ever auto-scanning
+ * the stackbrief package directory.
+ */
+async function startPickerServer() {
+  printBanner();
+
+  const aiInfo = await detectProvider();
+
+  printStep('Starting dashboard server');
+  const port = await startServer(null, 3000);   // null = no scan yet
+
+  console.log('');
+  console.log(`  Dashboard open at http://localhost:${port}`);
+  console.log(`  Choose your project in the browser to start scanning.`);
+
+  if (aiInfo.available && aiInfo.provider && aiInfo.model) {
+    const labels: Record<string, string> = { claude: 'Claude', openai: 'OpenAI', ollama: 'Ollama' };
+    const providerLabel = labels[aiInfo.provider] || aiInfo.provider;
+    const privacy = aiInfo.provider === 'ollama' ? ' - local, private' : ' - ready';
+    console.log(`  AI Chat: ${providerLabel} (${aiInfo.model})${privacy}`);
+  } else {
+    console.log(`  AI Chat: No provider configured`);
+  }
+  console.log('');
+
+  setTimeout(async () => {
+    console.log('  Opening dashboard in browser...');
+    try {
+      await open(`http://localhost:${port}`);
+    } catch { /* non-fatal */ }
+  }, 1000);
+
+  console.log('  Press Ctrl+C to stop\n');
+}
+
 const args = process.argv.slice(2);
 const command = args[0];
 
 if (command === 'scan') {
-  const targetDir = args[1] ? path.resolve(args[1]) : process.cwd();
-
-  if (!fs.existsSync(targetDir)) {
-    console.error(`  Error: Directory not found: ${targetDir}`);
-    process.exit(1);
+  if (args[1]) {
+    // Explicit path provided — scan it immediately
+    const targetDir = path.resolve(args[1]);
+    if (!fs.existsSync(targetDir)) {
+      console.error(`  Error: Directory not found: ${targetDir}`);
+      process.exit(1);
+    }
+    runScan(targetDir).catch(err => {
+      console.error('  Error:', err.message);
+      process.exit(1);
+    });
+  } else {
+    // No path provided — start server empty so user picks a project in the browser
+    startPickerServer().catch(err => {
+      console.error('  Error:', err.message);
+      process.exit(1);
+    });
   }
-
-  runScan(targetDir).catch(err => {
-    console.error('  Error:', err.message);
-    process.exit(1);
-  });
 } else if (command === '--version' || command === '-v') {
   console.log(VERSION);
 } else if (!command || command === '--help' || command === '-h') {

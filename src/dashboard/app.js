@@ -2244,6 +2244,13 @@
       if (!res.ok) throw new Error('Status ' + res.status);
       analysisData = await res.json();
 
+      // null means the server started without a scan target —
+      // always show the project picker so the user chooses what to scan.
+      if (!analysisData) {
+        showWelcomeScreen();
+        return;
+      }
+
       renderMeta(analysisData);
       renderMetrics(analysisData);
       renderArchitecture(analysisData.architecture, analysisData.stack);
@@ -2254,7 +2261,7 @@
       setupSearch(analysisData);
       initTooltips();
 
-      // First-run wizard check
+      // First-run wizard check (only relevant when scan data already exists)
       checkFirstRun();
 
       // Fetch npm versions in background
