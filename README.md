@@ -42,11 +42,17 @@ That is it. The dashboard opens at `localhost:3000`.
 ### Overview
 ![Overview](screenshots/overview.png)
 
+### Modules
+![Modules](screenshots/modules.png)
+
 ### Code Map
 ![Code Map](screenshots/codemap.png)
 
 ### Dependencies
 ![Dependencies](screenshots/dependencies.png)
+
+### Conventions
+![Conventions](screenshots/conventions.png)
 
 ### AI Settings
 ![Settings](screenshots/settings.png)
