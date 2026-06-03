@@ -9,6 +9,7 @@
 | Package Manager | npm |
 ## Architecture
 **Pattern:** Feature-based
+**CI/CD:** Yes
 ## Conventions
 | Convention | Style |
 |---|---|
@@ -19,9 +20,9 @@
 | Validation | Zod schemas |
 | File layout | src/ layout |
 ## Modules
-- `src` — Main source code (18 files)
+- `src` — Main source code (19 files)
 - `scripts` — Build and utility scripts (1 files)
-- `src/ai` — ai module (5 files)
+- `src/ai` — ai module (6 files)
 - `src/analyzer` — Data models (4 files)
 - `src/scanner` — scanner module (2 files)
 - `src/server` — server module (2 files)
@@ -32,7 +33,7 @@
 - `chokidar@3.5.3` — chokidar
 - `express@4.18.2` — Fast, minimalist web framework
 - `glob@10.3.10` — glob
-- `open@9.1.0` — open
+- `open@8.4.2` — open
 - `semver@7.5.4` — semver
 - `ws@8.16.0` — WebSocket library
 ---
